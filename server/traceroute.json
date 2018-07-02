@@ -1,0 +1,6 @@
+[
+  {
+    "from":"105.112.118.52","to":{"IP":"10.10.4.2","Zone":""},"maxHops":65,"host":"10.10.4.2",
+    "hops":[{"Success":true,"Address":[192,168,1,1],"Host":"","N":52,"ElapsedTime":5848775,"TTL":1},{"Success":true,"Address":[10,10,9,2],"Host":"","N":52,"ElapsedTime":5781672,"TTL":2},{"Success":true,"Address":[10,10,6,2],"Host":"","N":52,"ElapsedTime":8333665,"TTL":3},{"Success":true,"Address":[10,10,5,2],"Host":"","N":52,"ElapsedTime":7978817,"TTL":4},{"Success":true,"Address":[10,10,4,2],"Host":"","N":52,"ElapsedTime":42630703,"TTL":5}]
+  }
+]
