@@ -1,6 +1,123 @@
-[
+[  {
+  "from": "105.112.118.52",
+  "to": "10.10.4.2",
+  "maxHops": 65,
+  "host": "RouterFinale.it",
+  "hops":[
+    {
+      "success": true,
+      "address": "192.168.1.1",
+      "host": "",
+      "TTL": 1
+    }, 
+    {
+      "success": true,
+      "address": "10.10.9.2",
+      "host": "",
+      "TTL": 2
+    },
+    {
+      "success": true,
+      "address": "10.10.6.2",
+      "host": "",
+      "TTL": 3
+    },
+    {
+      "success": false,
+      "address": "0.0.0.0",
+      "host": "",
+      "TTL": 4
+    },
+    {
+      "success": true,
+      "address": "10.10.4.2",
+      "host": "RouterFinale.it",
+      "TTL": 5
+    }
+  ]
+},
   {
-    "from":"105.112.118.52","to":{"IP":"10.10.4.2","Zone":""},"maxHops":65,"host":"10.10.4.2",
-    "hops":[{"Success":true,"Address":[192,168,1,1],"Host":"","N":52,"ElapsedTime":5848775,"TTL":1},{"Success":true,"Address":[10,10,9,2],"Host":"","N":52,"ElapsedTime":5781672,"TTL":2},{"Success":true,"Address":[10,10,6,2],"Host":"","N":52,"ElapsedTime":8333665,"TTL":3},{"Success":true,"Address":[10,10,5,2],"Host":"","N":52,"ElapsedTime":7978817,"TTL":4},{"Success":true,"Address":[10,10,4,2],"Host":"","N":52,"ElapsedTime":42630703,"TTL":5}]
+    "from": "10.10.7.1",
+    "to": "10.10.8.2",
+    "maxHops": 65,
+    "host": "",
+    "hops": [
+      {
+        "success": true,
+        "address": "10.10.7.2"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      }
+    ]
+  },
+  {
+    "from": "10.10.8.2",
+    "to": "10.10.7.1",
+    "maxHops": 65,
+    "host": "",
+    "hops": [
+      {
+        "success": true,
+        "address": "10.10.8.1"
+      },
+      {
+        "success": true,
+        "address": "10.10.2.1"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      },
+      {
+        "success": false,
+        "address": "0.0.0.0"
+      }
+    ]
   }
 ]

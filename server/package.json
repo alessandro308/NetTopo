@@ -9,6 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@dagrejs/graphlib": "^2.1.4"
+    "@dagrejs/graphlib": "^2.1.4",
+    "express": "^4.16.3",
+    "pug": "^2.0.3",
+    "signale": "^1.2.1"
   }
 }
