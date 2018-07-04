@@ -28,7 +28,7 @@ type TracerouteResult struct {
 }
 
 func main() {
-	var from = flag.String("from", "127.0.0.1", "")
+	var from = flag.String("from", "localhost", "")
 	var to = flag.String("to", "127.0.0.1", "")
 	var server = flag.String("server", "1.1.1.1:5000", "")
 
