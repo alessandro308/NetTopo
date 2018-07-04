@@ -30,7 +30,7 @@ type TracerouteResult struct {
 
 func main() {
 	var to = flag.String("to", "127.0.0.1", "")
-	var server = flag.String("server", "1.1.1.1:5000", "")
+	var server = flag.String("server", "1.1.1.254:5000", "")
 
 	flag.Parse()
 	
@@ -38,6 +38,7 @@ func main() {
 	conn, err := net.Dial("tcp", *server)
 	
 	if err != nil {
+		fmt.Println("Error:")
 		log.Fatal(err)
 	} else {
 		fmt.Println("Done!")
@@ -48,6 +49,7 @@ func main() {
 	output, err := traceroute.Output()
 
 	if err != nil {
+		fmt.Println("Error:")
 		log.Fatal(err)
 	} else {
 		fmt.Println("Done!")
@@ -60,7 +62,7 @@ func main() {
 	traceID := regexp.MustCompile(`^\s(\d+)\s(.+)$`)
 	replyID := regexp.MustCompile(`(\S+)\s\((\S+)\)`)
 
-	// Remove the informative log
+	// Remove the header of the trace list
 	traces := strings.Split(string(output), "\n")[1:]
 	currentTTL := 0
 
@@ -77,16 +79,9 @@ func main() {
 			hop.TTL = currentTTL
 
 			result.Hops = append(result.Hops, hop)
-
-			// Received the ICMP packet reply
-			if replyID.MatchString(hopMatch[2]) {
-				replyMatch := replyID.FindStringSubmatch(hopMatch[2])
-				result.Hops[currentTTL-1].Address = replyMatch[2]
-				result.Hops[currentTTL-1].Host = replyMatch[1]
-				result.Hops[currentTTL-1].Success = true
-			}
-		// The current trace is a reply of the already set TTL
-		} else if replyID.MatchString(trace) {
+		}
+		// In the current trace there is a reply of the curret TTL
+		if replyID.MatchString(trace) {
 			replyMatch := replyID.FindStringSubmatch(trace)
 			result.Hops[currentTTL-1].Address = replyMatch[2]
 			result.Hops[currentTTL-1].Host = replyMatch[1]
