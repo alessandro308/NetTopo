@@ -6,6 +6,7 @@ import (
 	"log"
 	"regexp"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 
@@ -28,12 +29,11 @@ type TracerouteResult struct {
 }
 
 func main() {
-	var from = flag.String("from", "localhost", "")
 	var to = flag.String("to", "127.0.0.1", "")
 	var server = flag.String("server", "1.1.1.1:5000", "")
 
 	flag.Parse()
-
+	
 	fmt.Printf("Connection to NetTopo Server %s... ", *server)
 	conn, err := net.Dial("tcp", *server)
 	
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	var result TracerouteResult
-	result.From = *from
+	result.From, _ = os.Hostname()
 	result.To = *to
 
 	traceID := regexp.MustCompile(`^\s(\d+)\s(.+)$`)
