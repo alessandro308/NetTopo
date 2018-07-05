@@ -16,10 +16,10 @@ import (
 
 // TracerouteHop type
 type TracerouteHop struct {
-	Address     string
-	Host        string
-	Success     bool
-	TTL         int
+	Address     string	`json:"address"`
+	Host        string	`json:"host"`
+	Success     bool	`json:"success"`
+	TTL         int		`json:"ttl"`
 }
 // Final result type
 type TracerouteResult struct {
@@ -31,6 +31,7 @@ type TracerouteResult struct {
 func main() {
 	var to = flag.String("to", "127.0.0.1", "")
 	var server = flag.String("server", "1.1.1.254:5000", "")
+	var maxHops = flag.String("m", "10", "")
 
 	flag.Parse()
 	
@@ -44,7 +45,7 @@ func main() {
 		fmt.Println("Done!")
 	}
 	
-	traceroute := exec.Command("traceroute", *to)
+	traceroute := exec.Command("traceroute", *to, "-m", *maxHops)
 	fmt.Printf("Traceroute to Monitor %s... ", *to)
 	output, err := traceroute.Output()
 
