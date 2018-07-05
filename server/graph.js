@@ -92,14 +92,12 @@ class Graph{
             for(let j = 0; j<this._nodes.length; j++){
                 row[this._nodes[j].id] = 0;
             }
-            console.log("ROW");
-            console.log(row);
             result[this._nodes[i].id] = row;
         }
         this._edges.forEach(edge => {
             result[edge.start][edge.end] = 1;
         })
-        console.log(result);
+        return result;
     }
 }
 
