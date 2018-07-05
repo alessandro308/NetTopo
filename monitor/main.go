@@ -25,7 +25,14 @@ type TracerouteHop struct {
 type TracerouteResult struct {
 	From    string          `json:"from"`
 	To      string			`json:"to"`
+	Type	string			`json:"type"`
 	Hops    []TracerouteHop	`json:"hops"`
+}
+
+type Monitor struct {
+	IP		string	`json:"ip"`
+	Name	string	`json:"name"`
+	Type	string	`json:"type"`
 }
 
 func main() {
@@ -44,6 +51,21 @@ func main() {
 	} else {
 		fmt.Println("Done!")
 	}
+
+	// Subscription phase
+	fmt.Printf("Subscribing current monitor... ")
+	var monitor Monitor
+	monitor.Name, _ = os.Hostname()
+	// Retrieve IP address associated to the `eth0` interface
+	netInterface, _ := net.InterfaceByName("eth0")
+	ips, _ :=	netInterface.Addrs()
+	ip := ips[0].String()
+	monitor.IP = ip[:len(ip)-3]
+	// Subscribe current monitor
+	monitor.Type = "notify"
+	subscription, _ := json.Marshal(monitor)
+	conn.Write(subscription)
+	fmt.Println("Done!")
 	
 	traceroute := exec.Command("traceroute", *to, "-m", *maxHops)
 	fmt.Printf("Traceroute to Monitor %s... ", *to)
@@ -59,6 +81,7 @@ func main() {
 	var result TracerouteResult
 	result.From, _ = os.Hostname()
 	result.To = *to
+	result.Type = "trace"
 
 	traceID := regexp.MustCompile(`^\s(\d+)\s(.+)$`)
 	replyID := regexp.MustCompile(`(\S+)\s\((\S+)\)`)
