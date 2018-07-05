@@ -87,15 +87,17 @@ class Graph{
 
     adjMatrix(){
         let result = {};
-        for(let i = 0; i<this._nodes; i++){
+        for(let i = 0; i<this._nodes.length; i++){
             let row = {};
-            for(let j = 0; j<this._nodes; j++){
-                row[this._nodes[j]] = 0;
+            for(let j = 0; j<this._nodes.length; j++){
+                row[this._nodes[j].id] = 0;
             }
-            result[this._nodes[i]] = row;
+            console.log("ROW");
+            console.log(row);
+            result[this._nodes[i].id] = row;
         }
         this._edges.forEach(edge => {
-            result[edge.start, edge.end] = 1;
+            result[edge.start][edge.end] = 1;
         })
         console.log(result);
     }

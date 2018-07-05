@@ -285,6 +285,7 @@ function iTop() {
     }
     phase1(routerID)
     phase2();
+    console.log("PRINT ADJ");
     g.adjMatrix();
 };
 iTop();
