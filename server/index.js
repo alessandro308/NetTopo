@@ -240,10 +240,9 @@ function phase2(){
                 continue;
             }
             // Distance preservation
-            
 
 
-            //Link Endpoint Compatibility
+            //Link Endpoint Compatibility 
             
 
             if(valid){
@@ -286,6 +285,7 @@ function iTop() {
     }
     phase1(routerID)
     phase2();
+    g.adjMatrix();
 };
 iTop();
 
@@ -308,6 +308,7 @@ net.createServer(function (socket) {
             let ip = data.ip;
             if(!(name in networkData)){
                 networkData[name] = {
+                    isMonitor: true,
                     alias: [
                         ip
                     ]

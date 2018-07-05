@@ -63,6 +63,9 @@ class Graph{
     getOutEdge(nodeId){
         return this._edges.filter(e => e.start === nodeId);
     }
+    getInEdge(nodeId){
+        return this._edges.filter(e => e.end === nodeId);
+    }
 
     hasNode(id){
         return this.getNode(id) !== undefined
@@ -87,10 +90,14 @@ class Graph{
         for(let i = 0; i<this._nodes; i++){
             let row = {};
             for(let j = 0; j<this._nodes; j++){
-                row
+                row[this._nodes[j]] = 0;
             }
             result[this._nodes[i]] = row;
         }
+        this._edges.forEach(edge => {
+            result[edge.start, edge.end] = 1;
+        })
+        console.log(result);
     }
 }
 
