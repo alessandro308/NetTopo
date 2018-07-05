@@ -1,0 +1,8 @@
+# Node dependencies
+server/node_modules/
+
+# Visual Studio	
+.vs
+
+# Monitor application build
+monitor/main
