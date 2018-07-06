@@ -4,7 +4,7 @@ const signale = require('signale');
 
 const networkData = JSON.parse(fs.readFileSync('./netdata.json', 'utf8'));
 const tracerouteData = JSON.parse(fs.readFileSync('./traceroute.json', 'utf8'));
-
+let distance = {};
 function less(x, y){
     if(x.toUpperCase() === "H"){
         return true;
@@ -212,6 +212,7 @@ function phase1(routerID /*array*/) {
             addHop(oppositePath.hops[0], destinationName, null, pathName);
         }
         signale.complete("New trace added");
+        distance = graphlib.alg.floydWarshall(g); //distance is global var used to compare actual distance with new one after merge
     });
 
 }
@@ -248,7 +249,19 @@ function phase2(){
             console.log(edgeAttachment)
             // Distance preservation
             let copiedGraph = JSON.parse(JSON.stringify(g));
-            
+            copiedGraph.setEdge(node[i].v, node[j].w);
+            copiedGraph.removeEdge(node[i].v, node[i].w);
+            copiedGraph.removeEdge(node[j].v, node[j].w);
+            let newDistance = graphlib.alg.floydWarshall(g) // O(|V|^3)
+            for(let i = 0; i<tracerouteData.length; i++){ù
+                let trace = tracerouteData[i];
+                let from = getName(trace.from); // resolving alias === get node name associated to ip
+                let to = getName(trace.to);
+                if(newDistance[from][to] !== distance[from][to]){
+                    valid = false;
+                    break;
+                }
+            }
 
             //Link Endpoint Compatibility 
             
