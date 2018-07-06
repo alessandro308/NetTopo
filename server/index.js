@@ -1,4 +1,4 @@
-const Graph = require("./graph").Graph
+const Graph = require("@dagrejs/graphlib").Graph
 var fs = require('fs');
 const signale = require('signale');
 
@@ -60,19 +60,21 @@ function resultMerge(start1, end1, start2, end2){
     return;
 }
 
-let g = new Graph();
+let g = new Graph({
+    multigraph: true,
+    compound: true,
+    directed: true
+});
 
 anonRouter = function(){
     let routerName = 0;
-    let lastAnonRouter = 0;
     return {
         getNewAnonRouter: function(){
             routerName++;
-            lastAnonRouter++;
             return "A"+routerName;
         },
         getLastAnonRouter: function(){
-            return "A"+lastAnonRouter;
+            return "A"+routerName;
         }
     }
 }();
@@ -98,19 +100,19 @@ function getPath(from, to){
 }
 
 function addHop(currentHop, previousName, newNodeLabel, pathName){
-    if(pathName === undefined) console.trace();
     if(currentHop.success){ /* has replied */
         let currentName = getName(currentHop.address);
+        console.log(currentName);
         if(!g.hasNode(currentName)){
-            g.addNode(currentName, newNodeLabel);
+            g.setNode(currentName, newNodeLabel);
         }
-        g.addEdge(previousName, currentName, {path: pathName}, previousName+currentName+pathName) // Add pathName as label of the graph to remember which trace trigger its insertion
+        g.setEdge(previousName, currentName, {path: pathName}, pathName) 
     }else{ /* Anonymous one */
         let currentName = anonRouter.getNewAnonRouter();
         if(!g.hasNode(currentName)){
-            g.addNode(currentName, "A");
+            g.setNode(currentName, "A");
         }
-        g.addEdge(previousName, currentName, {path: pathName})
+        g.setEdge(previousName, currentName, {path: pathName}, pathName)
     }
 }
 
@@ -118,7 +120,7 @@ function phase1(routerID /*array*/) {
     
     g.setDefaultNodeLabel("R")
     routerID.forEach(element => {
-        g.addNode(element)
+        g.setNode(element)
     });
     tracerouteData.forEach(trace => {
         signale.await("Running trace");
@@ -190,12 +192,12 @@ function phase1(routerID /*array*/) {
                 let i = 1;
                 while(i < middleStarRouter-1){
                     let previousNode = anonRouter.getLastAnonRouter();
-                    g.addNode(anonRouter.getNewAnonRouter(), "HIDDEN");
-                    g.addEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});           
+                    g.setNode(anonRouter.getNewAnonRouter(), "HIDDEN");
+                    g.setEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});           
                     i++;
                 }
-                g.addNode(anonRouter.getNewAnonRouter(), "NO-COOP");
-                g.addEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});
+                g.setNode(anonRouter.getNewAnonRouter(), "NO-COOP");
+                g.setEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});
             }
             for(let i = successBA-1; i>=0; i--){
                 let currentHop = oppositePath.hops[i];
@@ -216,22 +218,26 @@ function phase1(routerID /*array*/) {
 
 function phase2(){
     let edges = g.edges();
+    let paths = {};
+    edges.forEach(e => { // Here I will create a map [path => edges[]] that is used in Trace Preservation analysis
+        let label = g.edge(e);
+        let path = label ? label.path : "" ;
+        if(paths.path === undefined)
+            paths.path = [e];
+        else
+            paths.path.push(e);
+    })
     let nodes = g.nodes();
-    console.log(nodes)
     for(let i = 0; i<edges.length; i++){
         let valid = true;
-        if(edges[i].options === undefined)
-            edges[i].options = {mergeOption: []};
-        else{
-            edges[i].options.mergeOption=[];
-        }
+        let edgeAttachment = g.edge(edges[i]) || {};
+        edgeAttachment.mergeOption=[];
+        g.setEdge(edges[i], edgeAttachment)
         for(let j = 0; j<edges.length; j++){
             if(i === j) continue;
             // Trace Preservation
-            let paths = g.paths;
-            for(let z = 0; z<paths; z++){
-                let edgesPath = g.getEdgeByPath(paths[z]);
-                if(edgesPath.includes(edges[i]) && edgesPath.includes(edges[j]) ){
+            for(path in paths){
+                if(paths[path].includes(edges[i]) && paths[path].includes(edges[j])){
                     valid = false;
                     break;
                 }
@@ -239,8 +245,10 @@ function phase2(){
             if(valid === false){
                 continue;
             }
+            console.log(edgeAttachment)
             // Distance preservation
-
+            let copiedGraph = JSON.parse(JSON.stringify(g));
+            
 
             //Link Endpoint Compatibility 
             
@@ -285,7 +293,7 @@ function iTop() {
     }
     phase1(routerID)
     phase2();
-    g.adjMatrix();
+    
 };
 iTop();
 
@@ -338,16 +346,14 @@ app.get('/', (req, res) => {
     let nodes = g.nodes();
     let edges = g.edges()
     let nodes_res = [];
-
     for(let i = 0; i<nodes.length; i++){
         let node = nodes[i];
-        nodes_res.push({id: node.id, label: `${node.id}\n${node.type || ""}`});
+        nodes_res.push({id: node, label: `${node}\n${g.node(node) || ""}`});
     }
-    console.log(nodes_res);
     let edges_res = [];
     for(i = 0; i<edges.length; i++){
         let edge = edges[i];
-        edges_res.push({from: edge.start, to: edge.end});
+        edges_res.push({from: edge.v, to: edge.w});
     }
     res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
 })
