@@ -1,4 +1,5 @@
-const Graph = require("@dagrejs/graphlib").Graph
+const graphlib = require("@dagrejs/graphlib")
+const Graph = graphlib.Graph
 var fs = require('fs');
 const signale = require('signale');
 
@@ -61,9 +62,7 @@ function resultMerge(start1, end1, start2, end2){
 }
 
 let g = new Graph({
-    multigraph: true,
-    compound: true,
-    directed: true
+    directed: false
 });
 
 anonRouter = function(){
@@ -100,20 +99,26 @@ function getPath(from, to){
 }
 
 function addHop(currentHop, previousName, newNodeLabel, pathName){
+    let currentName;
     if(currentHop.success){ /* has replied */
-        let currentName = getName(currentHop.address);
-        console.log(currentName);
+        currentName = getName(currentHop.address);
         if(!g.hasNode(currentName)){
             g.setNode(currentName, newNodeLabel);
         }
-        g.setEdge(previousName, currentName, {path: pathName}, pathName) 
+        
     }else{ /* Anonymous one */
-        let currentName = anonRouter.getNewAnonRouter();
+        currentName = anonRouter.getNewAnonRouter();
         if(!g.hasNode(currentName)){
             g.setNode(currentName, "A");
         }
-        g.setEdge(previousName, currentName, {path: pathName}, pathName)
     }
+    let attachment = g.edge(previousName, currentName);
+    if(attachment === undefined){
+        attachment = {path: [pathName]}
+    }else{
+        attachment.path.push(pathName);
+    }
+    g.setEdge(previousName, currentName, attachment) 
 }
 
 function phase1(routerID /*array*/) {
@@ -222,13 +227,15 @@ function phase2(){
     let paths = {};
     edges.forEach(e => { // Here I will create a map [path => edges[]] that is used in Trace Preservation analysis
         let label = g.edge(e);
-        let path = label ? label.path : "" ;
-        if(paths[path] === undefined)
-            paths[path] = [e];
-        else
-            paths[path].push(e);
+        let edgePaths = label ? label.path : [] ;
+        for(let i = 0; i<edgePaths.length; i++){
+            if(paths[edgePaths[i]] === undefined)
+                paths[edgePaths[i]] = [e];
+            else
+                paths[edgePaths[i]].push(e);
+        }
     })
-    let nodes = g.nodes();
+
     for(let i = 0; i<edges.length; i++){
         let valid = true;
         let edgeAttachment = g.edge(edges[i]) || {};
@@ -248,12 +255,13 @@ function phase2(){
             }
             
             // Distance preservation
-            let copiedGraph = JSON.parse(JSON.stringify(g));
-            copiedGraph.setEdge(node[i].v, node[j].w);
-            copiedGraph.removeEdge(node[i].v, node[i].w);
-            copiedGraph.removeEdge(node[j].v, node[j].w);
+            let serial = graphlib.json.write(g);
+            let copiedGraph = graphlib.json.read(serial);
+            copiedGraph.setEdge(edges[i].v, edges[j].w);
+            copiedGraph.removeEdge(edges[i].v, edges[i].w);
+            copiedGraph.removeEdge(edges[j].v, edges[j].w);
             let newDistance = graphlib.alg.floydWarshall(g) // O(|V|^3)
-            for(let i = 0; i<tracerouteData.length; i++){ù
+            for(let i = 0; i<tracerouteData.length; i++){
                 let trace = tracerouteData[i];
                 let from = getName(trace.from); // resolving alias === get node name associated to ip
                 let to = getName(trace.to);
@@ -301,10 +309,6 @@ function phase3(){
             g.setEdge(ei.v, ej.w, {});
         }else{ 
             // TODO Capire cosa vuol dire lo pseudocodice di questo ultime else
-            let ei_attach = g.edge(ei);
-            ei_attach.mergeOption.slice(index_of_ei);
-            edges[i].options.mergeOption.slice(ei);
-            edges[j].options.mergeOption.slice(ej);
 
         }
     }
