@@ -223,10 +223,10 @@ function phase2(){
     edges.forEach(e => { // Here I will create a map [path => edges[]] that is used in Trace Preservation analysis
         let label = g.edge(e);
         let path = label ? label.path : "" ;
-        if(paths.path === undefined)
-            paths.path = [e];
+        if(paths[path] === undefined)
+            paths[path] = [e];
         else
-            paths.path.push(e);
+            paths[path].push(e);
     })
     let nodes = g.nodes();
     for(let i = 0; i<edges.length; i++){
@@ -246,7 +246,7 @@ function phase2(){
             if(valid === false){
                 continue;
             }
-            console.log(edgeAttachment)
+            
             // Distance preservation
             let copiedGraph = JSON.parse(JSON.stringify(g));
             copiedGraph.setEdge(node[i].v, node[j].w);
@@ -264,10 +264,11 @@ function phase2(){
             }
 
             //Link Endpoint Compatibility 
-            
+                 // TO BE IMPLEMENTED
 
-            if(valid){
-                edges[i].options.mergeOption.push(edges[j]);
+            if(valid){ 
+                edgeAttachment.mergeOption.push(edges[j]);
+                g.setEdge(edges[i], edgeAttachment); // There is a control before that check that on edge E1 is not added E1 itself
             }
         }
     }
@@ -277,24 +278,34 @@ function phase3(){
     let interestingEdges = g.edges.filter(edge => edge.options.mergeOption.length > 0)
     while(interestingEdges.length > 0){
         let edges = interestingEdges;
-        let ei = 0;
-        let ej = 0;
+        let index_of_ei = 0;
         for(let i = 1; i<edges.length; i++){
             if(edges[i].options.mergeOption.length < 
-                edges[ei].options.mergeOption.length )
-                ei = i;
+                edges[index_of_ei].options.mergeOption.length )
+                index_of_ei = i;
         }
-        for(let j = 1; j<edges.length; j++){
-            if(i == j) continue;
-            if(edges[j].options.mergeOption.length < 
-                edges[ej].options.mergeOption.length )
-                ej = i;
+        let ei = edges[index_of_ei];
+        let minLength = g.edges().length+1; //Min length iniziatlized at the max value possible (+1 to trigger the condition the first time)
+        let ej;
+        let index_of_ej;
+        for(let j = 0; j<g.edge(ei).mergeOption.length; j++){
+            if(g.edge(g.edge(ei).mergeOption[j]).mergeOption.length < minLength ){
+                minLength = g.edge(g.edge(ei).mergeOption[j]).mergeOption.length;
+                ej = g.edge(ei).mergeOption[j];
+                index_of_ej = j;
+            }
         }
-        if(compatible(edges[i], edges[j])){
-            merge(i, j);
-        }else{
+        if(compatible(ei, ej)){ // TODO: write this compatible function, with reference to the TABLE (riga 4 pseudocodice)
+            g.removeEdge(ei.v, ei.w);
+            g.removeEdge(ej.v, ej.w);
+            g.setEdge(ei.v, ej.w, {});
+        }else{ 
+            // TODO Capire cosa vuol dire lo pseudocodice di questo ultime else
+            let ei_attach = g.edge(ei);
+            ei_attach.mergeOption.slice(index_of_ei);
             edges[i].options.mergeOption.slice(ei);
             edges[j].options.mergeOption.slice(ej);
+
         }
     }
 }
