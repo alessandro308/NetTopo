@@ -328,7 +328,7 @@ function phase3() {
 
 	while (existMergeOption()) { //Pseudocode from the paper
   		let ei = findEdgeWithLessMergeOptions(g.edges())
-  		let ej = findEdgeWithLessMergeOptions(g.edges(ei).mergeOption)
+  		let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
 		let mergeType = compatible(ei, ej);
     
 		if (mergeType) {
