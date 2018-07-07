@@ -302,14 +302,14 @@ function phase3(){
 	}
 
 	while (existMergeOption()) {
-		let ei = findEdgeWithLessMergeOptions(edges)
+		let ei = findEdgeWithLessMergeOptions(g.edges())
 		let ej = findEdgeWithLessMergeOptions(ei.mergeOption)
 
 		if (compatible(ei, ej)) {
 			// Merge (ei, ej)
 		} else {
-			ei.splice(ei.findIndex((edge) => edge === ej), 1) // Mi = Mi \ {ej}
-			ej.splice(ej.findIndex((edge) => edge === ei), 1) // Mj = Mj \ {ei}
+			ei.mergeOption.splice(ei.mergeOption.findIndex((edge) => edge === ej), 1) // Mi = Mi \ {ej}
+			ej.mergeOption.splice(ej.mergeOption.findIndex((edge) => edge === ei), 1) // Mj = Mj \ {ei}
 		}
 	}
 */
