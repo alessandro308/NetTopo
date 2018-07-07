@@ -60,7 +60,7 @@ function resultMerge(start1, end1, start2, end2){
     return null;
 }
 
-function checkEndPointCompatibility(edgeA, edgeB) {
+function compatible(edgeA, edgeB) {
 	typeStartA = g.node(edgeA.v).type;
 	typeEndA = g.node(edgeA.w).type;
 	typeStartB = g.node(edgeB.v).type;
@@ -280,7 +280,7 @@ function phase2(){
             }
 
             //Link Endpoint Compatibility 
-			valid = checkEndPointCompatibility(edges[i], edges[j]);
+			valid = compatible(edges[i], edges[j]);
             
             if(valid){ 
                 edgeAttachment.mergeOption.push(edges[j]);
