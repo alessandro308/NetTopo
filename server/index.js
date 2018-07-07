@@ -292,6 +292,27 @@ function phase2(){
 }
 
 function phase3(){
+/*
+	let existMergeOption = () => {
+		return g.edges().findIndex((edge) => edge.mergeOption.length > 0) != -1
+	}
+
+	let findEdgeWithLessMergeOptions = (inRange) => {
+		return inRange.reduce((min, current) => current.mergeOption.length < min.mergeOption.length ? current : min, inRange[0]);
+	}
+
+	while (existMergeOption()) {
+		let ei = findEdgeWithLessMergeOptions(edges)
+		let ej = findEdgeWithLessMergeOptions(ei.mergeOption)
+
+		if (compatible(ei, ej)) {
+			// Merge (ei, ej)
+		} else {
+			ei.splice(ei.findIndex((edge) => edge === ej), 1) // Mi = Mi \ {ej}
+			ej.splice(ej.findIndex((edge) => edge === ei), 1) // Mj = Mj \ {ei}
+		}
+	}
+*/
     let edges = g.edges();
     let interestingEdges = [];
     for(let i = 0; i<edges.length; i++){
