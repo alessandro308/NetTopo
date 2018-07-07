@@ -291,68 +291,56 @@ function phase2(){
     }
 }
 
-function phase3(){
-/*
+function phase3() {
 	let existMergeOption = () => {
-		return g.edges().findIndex((edge) => edge.mergeOption.length > 0) != -1
+		return g.edges().findIndex(e => g.edge(e).mergeOption && g.edge(e).mergeOption.length > 0) != -1
 	}
 
 	let findEdgeWithLessMergeOptions = (inRange) => {
-		return inRange.reduce((min, current) => current.mergeOption.length < min.mergeOption.length ? current : min, inRange[0]);
+		return inRange.reduce((min, current) => g.edge(current).mergeOption.length < g.edge(min).mergeOption.length ? current : min, inRange[0])
 	}
 
-	while (existMergeOption()) {
-		let ei = findEdgeWithLessMergeOptions(g.edges())
-		let ej = findEdgeWithLessMergeOptions(ei.mergeOption)
+	let merge = (ei, ej, mergeType) {
+		// Merging of the edges
+		let inEdges = g.inEdges(ej.v)
+		let outEdges = g.outEdges(ej.w)
+    
+		for (let i = 0; i<inEdges.length; i++) {
+			let label = g.edge(inEdges[i])
+			g.setEdge(inEdges[i].v, ei.v, label)
+			g.removeEdge(inEdges[i].v, inEdges[i].w)
+		}
+    
+		for (i = 0; i<outEdges.length; i++) {
+			g.setEdge(ei.w, outEdges[i].w, g.edge(outEdges[i]))
+			g.removeEdge(outEdges[i].v, outEdges[i].w)
+		}
+    
+		// Reassign the nodes type
+		let startLabel = g.node(ei.v)
+		startLabel.type = mergeType[0]
+		g.setNode(ei.v, startLabel)
+    
+		let endLabel = g.node(ei.w)
+		endLabel.type = mergeType[1]
+		g.setNode(ei.w, endLabel)
+	}
 
-		if (compatible(ei, ej)) {
-			// Merge (ei, ej)
+	while (existMergeOption()) { //Pseudocode from the paper
+  		let ei = findEdgeWithLessMergeOptions(g.edges())
+  		let ej = findEdgeWithLessMergeOptions(g.edges(ei).mergeOption)
+		let mergeType = compatible(ei, ej);
+    
+		if (mergeType) {
+			merge(ei, ej, mergeType)
 		} else {
-			ei.mergeOption.splice(ei.mergeOption.findIndex((edge) => edge === ej), 1) // Mi = Mi \ {ej}
-			ej.mergeOption.splice(ej.mergeOption.findIndex((edge) => edge === ei), 1) // Mj = Mj \ {ei}
+			let mi = g.edge(ei).mergeOption
+			let mj = g.edge(ej).mergeOption
+      
+			mi.splice(mi.indexOf(ej), 1) // Mi = Mi \ {ej}
+			mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
 		}
 	}
-*/
-    let edges = g.edges();
-    let interestingEdges = [];
-    for(let i = 0; i<edges.length; i++){
-        let attachment = g.edge(edges[i]);
-        console.log(attachment.mergeOption);
-        if(attachment.mergeOption.length > 0){
-            interestingEdges.push(edges[i]);
-        }
-    }
-
-    while(interestingEdges.length > 0){
-        let edges = interestingEdges;
-        let index_of_ei = 0;
-        for(let i = 1; i<edges.length; i++){
-            if(edges[i].options.mergeOption.length < 
-                edges[index_of_ei].options.mergeOption.length )
-                index_of_ei = i;
-        }
-        let ei = edges[index_of_ei];
-        let minLength = g.edges().length+1; //Min length iniziatlized at the max value possible (+1 to trigger the condition the first time)
-        let ej;
-        for(let j = 0; j<g.edge(ei).mergeOption.length; j++){
-            if(g.edge(g.edge(ei).mergeOption[j]).mergeOption.length < minLength ){
-                minLength = g.edge(g.edge(ei).mergeOption[j]).mergeOption.length;
-                ej = g.edge(ei).mergeOption[j];
-            }
-        }
-        if(compatible(ei, ej)){ // TODO: write this compatible function, with reference to the TABLE (riga 4 pseudocodice)
-            let mergeOption_ei = g.edge(ei);
-            let mergeOption_ej = g.edge(ej);
-            g.removeEdge(ei.v, ei.w);
-            g.removeEdge(ej.v, ej.w);
-            let mergeOption_result = [...mergeOption_ei, ...mergeOption_ej];
-            console.log(mergeOption_result);
-            g.setEdge(ei.v, ej.w, {mergeOption: []});
-        }else{ 
-            // TODO Capire cosa vuol dire lo pseudocodice di questo ultime else
-
-        }
-    }
 }
 
 function iTop() {
