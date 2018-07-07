@@ -111,13 +111,13 @@ function addHop(currentHop, previousName, newNodeLabel, pathName){
     if(currentHop.success){ /* has replied */
         currentName = getName(currentHop.address);
         if(!g.hasNode(currentName)){
-            g.setNode(currentName, newNodeLabel);
+            g.setNode(currentName, {type: newNodeLabel});
         }
         
     }else{ /* Anonymous one */
         currentName = anonRouter.getNewAnonRouter();
         if(!g.hasNode(currentName)){
-            g.setNode(currentName, "A");
+            g.setNode(currentName, {type: "A"});
         }
     }
     let attachment = g.edge(previousName, currentName);
@@ -131,7 +131,7 @@ function addHop(currentHop, previousName, newNodeLabel, pathName){
 
 function phase1(routerID /*array*/) {
     
-    g.setDefaultNodeLabel("R")
+    g.setDefaultNodeLabel({type: "R"})
     routerID.forEach(element => {
         g.setNode(element)
     });
@@ -200,16 +200,16 @@ function phase1(routerID /*array*/) {
                 }
                 addHop(currentHop, previouName, undefined, pathName);
             }
-            addHop(hops[successAB-1], anonRouter.getNewAnonRouter(), "NO-COOP", pathName);
+            addHop(hops[successAB-1], anonRouter.getNewAnonRouter(), {type: "NO-COOP"}, pathName);
             if(middleStarRouter > 1){
                 let i = 1;
                 while(i < middleStarRouter-1){
                     let previousNode = anonRouter.getLastAnonRouter();
-                    g.setNode(anonRouter.getNewAnonRouter(), "HIDDEN");
+                    g.setNode(anonRouter.getNewAnonRouter(), {type: "HIDDEN"});
                     g.setEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});           
                     i++;
                 }
-                g.setNode(anonRouter.getNewAnonRouter(), "NO-COOP");
+                g.setNode(anonRouter.getNewAnonRouter(), {type: "NO-COOP"});
                 g.setEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});
             }
             for(let i = successBA-1; i>=0; i--){
@@ -281,9 +281,10 @@ function phase2(){
 
             //Link Endpoint Compatibility 
 			valid = checkEndPointCompatibility(edges[i], edges[j]);
-
+            
             if(valid){ 
                 edgeAttachment.mergeOption.push(edges[j]);
+                console.log(edgeAttachment.mergeOption);
                 g.setEdge(edges[i], edgeAttachment); // There is a control before that check that on edge E1 is not added E1 itself
             }
         }
@@ -291,7 +292,16 @@ function phase2(){
 }
 
 function phase3(){
-    let interestingEdges = g.edges.filter(edge => edge.options.mergeOption.length > 0)
+    let edges = g.edges();
+    let interestingEdges = [];
+    for(let i = 0; i<edges.length; i++){
+        let attachment = g.edge(edges[i]);
+        console.log(attachment.mergeOption);
+        if(attachment.mergeOption.length > 0){
+            interestingEdges.push(edges[i]);
+        }
+    }
+
     while(interestingEdges.length > 0){
         let edges = interestingEdges;
         let index_of_ei = 0;
@@ -303,18 +313,20 @@ function phase3(){
         let ei = edges[index_of_ei];
         let minLength = g.edges().length+1; //Min length iniziatlized at the max value possible (+1 to trigger the condition the first time)
         let ej;
-        let index_of_ej;
         for(let j = 0; j<g.edge(ei).mergeOption.length; j++){
             if(g.edge(g.edge(ei).mergeOption[j]).mergeOption.length < minLength ){
                 minLength = g.edge(g.edge(ei).mergeOption[j]).mergeOption.length;
                 ej = g.edge(ei).mergeOption[j];
-                index_of_ej = j;
             }
         }
         if(compatible(ei, ej)){ // TODO: write this compatible function, with reference to the TABLE (riga 4 pseudocodice)
+            let mergeOption_ei = g.edge(ei);
+            let mergeOption_ej = g.edge(ej);
             g.removeEdge(ei.v, ei.w);
             g.removeEdge(ej.v, ej.w);
-            g.setEdge(ei.v, ej.w, {});
+            let mergeOption_result = [...mergeOption_ei, ...mergeOption_ej];
+            console.log(mergeOption_result);
+            g.setEdge(ei.v, ej.w, {mergeOption: []});
         }else{ 
             // TODO Capire cosa vuol dire lo pseudocodice di questo ultime else
 
