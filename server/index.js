@@ -6,6 +6,7 @@ const signale = require('signale');
 const networkData = JSON.parse(fs.readFileSync('./netdata.json', 'utf8'));
 const tracerouteData = JSON.parse(fs.readFileSync('./traceroute.json', 'utf8'));
 let distance = {};
+
 function less(x, y){
     if(x.toUpperCase() === "H"){
         return true;
@@ -54,11 +55,18 @@ function max(x, y){
 }
 function resultMerge(start1, end1, start2, end2){
     if(less(start1, start2) !== null && less(end1, end2) !== null){
-        return [max(start1, start2), max(end1, end2)];
-    }else if(less(start1, end2) !== null && less(start2, end1) !== null) {
-        return [max(start1, end2), max(start2, end1)]
+		return [max(start1, start2), max(end1, end2)];
     }
-    return;
+    return null;
+}
+
+function checkEndPointCompatibility(edgeA, edgeB) {
+	typeStartA = g.node(edgeA.v).type;
+	typeEndA = g.node(edgeA.w).type;
+	typeStartB = g.node(edgeB.v).type;
+	typeEndB = g.node(edgeB.w).type;
+
+	return resultMerge(typeStartA, typeEndA, typeStartB, typeEndB) != null;
 }
 
 let g = new Graph({
@@ -272,7 +280,7 @@ function phase2(){
             }
 
             //Link Endpoint Compatibility 
-                 // TO BE IMPLEMENTED
+			valid = checkEndPointCompatibility(edges[i], edges[j]);
 
             if(valid){ 
                 edgeAttachment.mergeOption.push(edges[j]);
