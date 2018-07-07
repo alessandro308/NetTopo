@@ -200,16 +200,16 @@ function phase1(routerID /*array*/) {
                 }
                 addHop(currentHop, previouName, undefined, pathName);
             }
-            addHop(hops[successAB-1], anonRouter.getNewAnonRouter(), {type: "NO-COOP"}, pathName);
+            addHop(hops[successAB-1], anonRouter.getNewAnonRouter(), {type: "N"}, pathName);
             if(middleStarRouter > 1){
                 let i = 1;
                 while(i < middleStarRouter-1){
                     let previousNode = anonRouter.getLastAnonRouter();
-                    g.setNode(anonRouter.getNewAnonRouter(), {type: "HIDDEN"});
+                    g.setNode(anonRouter.getNewAnonRouter(), {type: "H"});
                     g.setEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});           
                     i++;
                 }
-                g.setNode(anonRouter.getNewAnonRouter(), {type: "NO-COOP"});
+                g.setNode(anonRouter.getNewAnonRouter(), {type: "N"});
                 g.setEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});
             }
             for(let i = successBA-1; i>=0; i--){
@@ -284,7 +284,7 @@ function phase2(){
             
             if(valid){ 
                 edgeAttachment.mergeOption.push(edges[j]);
-                console.log(edgeAttachment.mergeOption);
+                console.log(edges[i], edgeAttachment.mergeOption);
                 g.setEdge(edges[i], edgeAttachment); // There is a control before that check that on edge E1 is not added E1 itself
             }
         }
