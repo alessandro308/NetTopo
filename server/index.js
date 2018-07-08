@@ -5,7 +5,13 @@ const signale = require('signale');
 
 const networkData = JSON.parse(fs.readFileSync('./netdata.json', 'utf8'));
 const tracerouteData = JSON.parse(fs.readFileSync('./traceroute.json', 'utf8'));
-let distance = {};
+
+function assert(condition, message) {
+    if (!condition) {
+        console.trace();
+        throw message || "Assertion failed";
+    }
+}
 
 function less(x, y){
     if(x.toUpperCase() === "H"){
@@ -65,7 +71,16 @@ function compatible(edgeA, edgeB) {
 	typeEndA = g.node(edgeA.w).type;
 	typeStartB = g.node(edgeB.v).type;
 	typeEndB = g.node(edgeB.w).type;
-
+    if(typeStartA.toUpperCase() === "R" && typeStartB === "R" ){
+        if(edgeA.v !== edgeB.v) {
+            return false;
+        }
+    }
+    if(typeEndA.toUpperCase() === "R" && typeEndB === "R"){
+        if(edgeA.w !== edgeB.w){
+            return false;
+        }
+    }
 	return resultMerge(typeStartA, typeEndA, typeStartB, typeEndB) != null;
 }
 
@@ -106,19 +121,9 @@ function getPath(from, to){
     }
 }
 
-function addHop(currentHop, previousName, newNodeLabel, pathName){
-    let currentName;
-    if(currentHop.success){ /* has replied */
-        currentName = getName(currentHop.address);
-        if(!g.hasNode(currentName)){
-            g.setNode(currentName, {type: newNodeLabel});
-        }
-        
-    }else{ /* Anonymous one */
-        currentName = anonRouter.getNewAnonRouter();
-        if(!g.hasNode(currentName)){
-            g.setNode(currentName, {type: "A"});
-        }
+function addHop(currentName, previousName, newNodeLabel, pathName){
+    if(!g.hasNode(currentName)){
+        g.setNode(currentName, newNodeLabel);
     }
     let attachment = g.edge(previousName, currentName);
     if(attachment === undefined){
@@ -129,21 +134,59 @@ function addHop(currentHop, previousName, newNodeLabel, pathName){
     g.setEdge(previousName, currentName, attachment) 
 }
 
-function phase1(routerID /*array*/) {
+let merge = (graph, ei, ej) => {
+    let inEdges = graph.nodeEdges(ej.v).filter(e => ej.w != e.v && ej.w != e.w).map(e => e.w === ej.v ? e : {v: e.w, w: e.v}); 
+    let outEdges = graph.nodeEdges(ej.w).filter(e => ej.v != e.v && ej.v != e.w).map(e => e.v === ej.w ? e : {v: e.w, w: e.v});
+    /*
+        startLabel.id = ei.v.charAt(0) == "R" ? ei.v : ej.v;
+        endLabel.id = ei.w.charAt(0) == "R" ? ei.w : ej.w;
+    */
+    for (let i = 0; i<inEdges.length; i++) {
+        let label = graph.edge(inEdges[i])
+        // TODO MERGING DELLE LABEL
+        graph.removeEdge(inEdges[i].v, ej.v);
+        graph.setEdge(inEdges[i].v, ei.v, label) 
+    }
+
+    for (i = 0; i<outEdges.length; i++) {
+        // TODO MERGING DELLA LABEL
+        graph.removeEdge(ej.v, outEdges[i].w)
+        graph.setEdge(ei.w, outEdges[i].w, graph.edge(outEdges[i]))   
+    }
+
+    let mergeType = resultMerge(
+        graph.node(ei.v).type,
+        graph.node(ei.w).type,
+        graph.node(ej.v).type,
+        graph.node(ej.w).type
+    )
+    assert(mergeType != null, "MERGING TWO EDGE NOT VALID");
+    // Reassign the nodes type
+    let startLabel = graph.node(ei.v)
+    startLabel.type = mergeType[0]
+    graph.setNode(ei.v, startLabel)
+
+    let endLabel = graph.node(ei.w)
+    endLabel.type = mergeType[1]
+    
+    graph.setNode(ei.w, endLabel)
+
+    if(ei.v !== ej.v && ei.w !==ej.v)
+        graph.removeNode(ej.v);
+    if(ei.v !== ej.w && ei.w !==ej.w)
+        graph.removeNode(ej.w);
+}
+
+function phase1() {
     
     g.setDefaultNodeLabel({type: "R"})
-    routerID.forEach(element => {
-        g.setNode(element)
-    });
     tracerouteData.forEach(trace => {
-        signale.await("Running trace");
         let originRouter = getName(trace.from);
         let destinationName = getName(trace.to);
         let pathName = getName(trace.from)+getName(trace.to);
        
         let hops = trace.hops;
         if(hops[hops.length-1].success){ /* If origin can communicate with destination */
-            console.log("Traceroute can reach the destination");
             for(let i = 0; i<hops.length; i++){
                 let currentHop = hops[i];
                 let previouName;
@@ -156,37 +199,37 @@ function phase1(routerID /*array*/) {
                         previouName = anonRouter.getLastAnonRouter();
                     }
                 }
-                addHop(currentHop, previouName, null, pathName)
+                let label = currentHop.success ? {type: "R"} : {type: "A"}
+                let currentName = currentHop.success ? getName(currentHop.address) : anonRouter.getNewAnonRouter();
+                addHop(currentName, previouName, label,  pathName)
             }
         }else{ /* If origin cannot communicate with destination */
-            console.log("Traceroute cannot reach the destination");
-            if(trace.alreadyUsed || networkData[originRouter]===undefined){ // Avoid to consider a path already used as opposite path
+            if(trace.alreadyUsed){ // Avoid to consider a path already used as opposite path
                 return;
             }
-            signale.success("Found path that cannot communicate");
-            
             let distance = networkData[originRouter].distance[destinationName];
-            
+            assert(distance != undefined, `Not defined distance between ${originRouter} and ${destinationName}`);
             let oppositePath = getPath(destinationName, originRouter);
+            assert(oppositePath != undefined, `Not found opposite path ${destinationName} => ${originRouter} ...`);
 
             oppositePath.alreadyUsed = true;
-            let successAB = hops.length;
-            let successBA = hops.length;
+            let successNumberAB = hops.length; // Traceroute max hops
+            let successNumberBA = hops.length;
             let index = hops.length-1;
-            // Get how many success hops from A to B
+            // discard all hops that are blocked from A to B
             while(!hops[index].success){
-                successAB--;
+                successNumberAB--;
                 index--;
             }
+
             index = oppositePath.hops.length-1;
-            // Get how many success hops from B to A
+            //  discard all hops that are blocked from B to A
             while(!oppositePath.hops[index].success){
-                successBA--;
+                successNumberBA--;
                 index--;
             }
             
-            let middleStarRouter = distance - successAB - successBA;
-            for(let i = 0; i<successAB; i++){
+            for(let i = 0; i<successNumberAB; i++){
                 let currentHop = hops[i];
                 let previouName;
                 if(i == 0){
@@ -198,36 +241,45 @@ function phase1(routerID /*array*/) {
                         previouName = anonRouter.getLastAnonRouter();
                     }
                 }
-                addHop(currentHop, previouName, undefined, pathName);
+                let label = currentHop.success ? {type: "R"} : {type: "A"};
+                let currentName = currentHop.success ? getName(currentHop.address) : anonRouter.getNewAnonRouter();
+                addHop(currentName, previouName, label,  pathName)
             }
-            addHop(hops[successAB-1], anonRouter.getNewAnonRouter(), {type: "N"}, pathName);
-            if(middleStarRouter > 1){
+            let unknownRouters = distance - successNumberAB - successNumberBA;
+
+            if(unknownRouters === 1){
+                let label = {type: "B"};
+                addHop(anonRouter.getNewAnonRouter(), getName(hops[successNumberAB-1].address), label, pathName);
+                addHop(getName(oppositePath.hops[successNumberBA-1].address), anonRouter.getLastAnonRouter(), {type: "R"}, pathName);
+            }else{
+                addHop(anonRouter.getNewAnonRouter(), getName(hops[successNumberAB-1].address), {type: "N"}, pathName);
                 let i = 1;
-                while(i < middleStarRouter-1){
+                while(i < unknownRouters-1){ // adding hidden routers
                     let previousNode = anonRouter.getLastAnonRouter();
-                    g.setNode(anonRouter.getNewAnonRouter(), {type: "H"});
-                    g.setEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});           
+                    addHop(anonRouter.getNewAnonRouter(), previousNode, {type: "H"}, pathName)      
                     i++;
                 }
-                g.setNode(anonRouter.getNewAnonRouter(), {type: "N"});
-                g.setEdge(previousNode, anonRouter.getLastAnonRouter(), {path: pathName});
+                let previousName = anonRouter.getLastAnonRouter();
+                addHop(anonRouter.getNewAnonRouter(), previousName, {type: "N"}, pathName);
+                addHop(getName(oppositePath.hops[successNumberBA-1].address), anonRouter.getLastAnonRouter(), {type: "R"}, pathName);
             }
-            for(let i = successBA-1; i>=0; i--){
+            
+            for(let i = successNumberBA-1; i>=0; i--){
                 let currentHop = oppositePath.hops[i];
                 let previouName;
-                if(i < successBA-1 && oppositePath.hops[i+1].success){
+                if(i < successNumberBA-1 && oppositePath.hops[i+1].success){
                     previouName = getName(oppositePath.hops[i+1].address);
                 }else{
                     previouName = anonRouter.getLastAnonRouter();
                 }
-                addHop(currentHop, previouName, null, pathName);
+                let label = currentHop.success ? {type: "R"} : {type: "A"}
+                let currentName = currentHop.success ? getName(currentHop.address) : anonRouter.getNewAnonRouter();
+                addHop(currentName, previouName, label,  pathName)
             }
-            addHop(oppositePath.hops[0], destinationName, null, pathName);
+            addHop(getName(oppositePath.hops[0].address), destinationName, {type: "R"}, pathName);
         }
-        signale.complete("New trace added");
-        distance = graphlib.alg.floydWarshall(g); //distance is global var used to compare actual distance with new one after merge
+        signale.complete(`New trace added from ${originRouter} to ${destinationName}`);
     });
-
 }
 
 function phase2(){
@@ -243,48 +295,74 @@ function phase2(){
                 paths[edgePaths[i]].push(e);
         }
     })
+    let distance = graphlib.alg.floydWarshall(g, () => 1, (node) => g.nodeEdges(node)); //distance is a var used to compare actual distance with new one after merge
 
     for(let i = 0; i<edges.length; i++){
-        let valid = true;
+        signale.await(`********Phase2 on ${edges[i].v} => ${edges[i].w}**********`);
         let edgeAttachment = g.edge(edges[i]) || {};
         edgeAttachment.mergeOption=[];
-        g.setEdge(edges[i], edgeAttachment)
-        for(let j = 0; j<edges.length; j++){
+        g.setEdge(edges[i], edgeAttachment) // adding mergeOption to the existing label
+        for(let j = 0; j<2 /*edges.length*/; j++){
             if(i === j) continue;
+            let valid = true;
+            signale.watch("***** Edge1: ", edges[i], " Edge2: ", edges[j]);
             // Trace Preservation
             for(path in paths){
                 if(paths[path].includes(edges[i]) && paths[path].includes(edges[j])){
                     valid = false;
+                    signale.error("Unpassed trace preservation", path);
                     break;
                 }
-            }
+            } 
             if(valid === false){
                 continue;
             }
-            
-            // Distance preservation
-            let serial = graphlib.json.write(g);
-            let copiedGraph = graphlib.json.read(serial);
-            copiedGraph.setEdge(edges[i].v, edges[j].w);
-            copiedGraph.removeEdge(edges[i].v, edges[i].w);
-            copiedGraph.removeEdge(edges[j].v, edges[j].w);
-            let newDistance = graphlib.alg.floydWarshall(g) // O(|V|^3)
-            for(let i = 0; i<tracerouteData.length; i++){
-                let trace = tracerouteData[i];
-                let from = getName(trace.from); // resolving alias === get node name associated to ip
-                let to = getName(trace.to);
-                if(newDistance[from][to] !== distance[from][to]){
-                    valid = false;
-                    break;
-                }
-            }
+            signale.success("Passed trace preservation")
 
-            //Link Endpoint Compatibility 
-			valid = compatible(edges[i], edges[j]);
-            
-            if(valid){ 
+            //Distance and link endpoint compatibility
+            if( !compatible(edges[i], edges[j]) ){
+                valid = false;
+                signale.error("Not passed compatbility");
+            }else{
+                signale.success("Passed compatibility")
+                let serial = JSON.stringify(graphlib.json.write(g));
+                let copiedGraph = graphlib.json.read(JSON.parse(serial));
+                merge(copiedGraph, edges[i], edges[j]);
+                let newDistance = graphlib.alg.floydWarshall(copiedGraph, () => 1, (node) => g.nodeEdges(node)) // O(|V|^3)
+                /*/Producing data to graph
+                let _nodes = copiedGraph.nodes();
+                let _edges = copiedGraph.edges()
+                let _nodes_res = [];
+                for(let _i = 0; _i<_nodes.length; _i++){
+                    let _node = _nodes[_i];
+                    _nodes_res.push({id: _node, label: `${_node}\n${copiedGraph.node(_node).type || ""}`, group: `${copiedGraph.node(_node).type || ""}`});
+                }
+                let _edges_res = [];
+                for(_i = 0; _i<_edges.length; _i++){
+                    let _edge = _edges[_i];
+                    _edges_res.push({from: _edge.v, to: _edge.w});
+                }
+                console.log(JSON.stringify(_nodes_res));
+                console.log(JSON.stringify(_edges_res));
+                console.log(newDistance);*/
+
+                for(let i = 0; i<tracerouteData.length; i++){
+                    let trace = tracerouteData[i];
+                    let from = getName(trace.from); // resolving alias === get node name associated to ip
+                    let to = getName(trace.to);
+                    if(newDistance[from][to].distance != undefined && newDistance[from][to].distance !== distance[from][to].distance){
+                        valid = false;
+                        signale.error("Unpassed distance on path", from, to, " Mi aspettavo ", distance[from][to].distance, "trovata", newDistance[from][to].distance);
+                        
+                        
+                        break;
+                    }
+                }
+                signale.success("Passed distance")
+            }
+            if(valid){
+                signale.success(`VALID TRUE - adding mergeOption`);
                 edgeAttachment.mergeOption.push(edges[j]);
-                console.log(edges[i], edgeAttachment.mergeOption);
                 g.setEdge(edges[i], edgeAttachment); // There is a control before that check that on edge E1 is not added E1 itself
             }
         }
@@ -300,39 +378,13 @@ function phase3() {
 		return inRange.reduce((min, current) => g.edge(current).mergeOption.length < g.edge(min).mergeOption.length ? current : min, inRange[0])
 	}
 
-	let merge = (ei, ej, mergeType) {
-		// Merging of the edges
-		let inEdges = g.inEdges(ej.v)
-		let outEdges = g.outEdges(ej.w)
-    
-		for (let i = 0; i<inEdges.length; i++) {
-			let label = g.edge(inEdges[i])
-			g.setEdge(inEdges[i].v, ei.v, label)
-			g.removeEdge(inEdges[i].v, inEdges[i].w)
-		}
-    
-		for (i = 0; i<outEdges.length; i++) {
-			g.setEdge(ei.w, outEdges[i].w, g.edge(outEdges[i]))
-			g.removeEdge(outEdges[i].v, outEdges[i].w)
-		}
-    
-		// Reassign the nodes type
-		let startLabel = g.node(ei.v)
-		startLabel.type = mergeType[0]
-		g.setNode(ei.v, startLabel)
-    
-		let endLabel = g.node(ei.w)
-		endLabel.type = mergeType[1]
-		g.setNode(ei.w, endLabel)
-	}
 
 	while (existMergeOption()) { //Pseudocode from the paper
   		let ei = findEdgeWithLessMergeOptions(g.edges())
   		let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
-		let mergeType = compatible(ei, ej);
     
-		if (mergeType) {
-			merge(ei, ej, mergeType)
+		if (compatible(ei, ej)) {
+			merge(g, ei, ej)
 		} else {
 			let mi = g.edge(ei).mergeOption
 			let mj = g.edge(ej).mergeOption
@@ -344,13 +396,8 @@ function phase3() {
 }
 
 function iTop() {
-    let routerID = [];
-    for(key in networkData){
-        routerID.push(key);
-    }
-    phase1(routerID)
+    phase1();
     phase2();
-    
 };
 iTop();
 
@@ -405,12 +452,12 @@ app.get('/', (req, res) => {
     let nodes_res = [];
     for(let i = 0; i<nodes.length; i++){
         let node = nodes[i];
-        nodes_res.push({id: node, label: `${node}\n${g.node(node) || ""}`});
+        nodes_res.push({id: node, label: `${node}\n${g.node(node).type || ""}`, group: `${g.node(node).type || ""}`});
     }
     let edges_res = [];
     for(i = 0; i<edges.length; i++){
         let edge = edges[i];
-        edges_res.push({from: edge.v, to: edge.w});
+        edges_res.push({from: edge.v, to: edge.w, label: JSON.stringify(  g.edge(edges[i]).mergeOption  )});
     }
     res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
 })
