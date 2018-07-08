@@ -135,23 +135,24 @@ function addHop(currentName, previousName, newNodeLabel, pathName){
 }
 
 let merge = (graph, ei, ej) => {
-    let inEdges = graph.nodeEdges(ej.v).filter(e => ej.w != e.v && ej.w != e.w).map(e => e.w === ej.v ? e : {v: e.w, w: e.v}); 
-    let outEdges = graph.nodeEdges(ej.w).filter(e => ej.v != e.v && ej.v != e.w).map(e => e.v === ej.w ? e : {v: e.w, w: e.v});
+  				/*All incident edges ej.v - filter by the edges that aren't the edge to merge - mapping in order to have the start as other node, not own*/
+    let inEdges = graph.nodeEdges(ej.v).map(e => e.w === ej.v ? e : {v: e.w, w: e.v}).filter(e => e.v != ei.w && e.v != ej.w); 
+    let outEdges = graph.nodeEdges(ej.w).map(e => e.v === ej.w ? e : {v: e.w, w: e.v}).filter(e => e.w != ej.v && e.w != ei.v);
     /*
         startLabel.id = ei.v.charAt(0) == "R" ? ei.v : ej.v;
         endLabel.id = ei.w.charAt(0) == "R" ? ei.w : ej.w;
     */
     for (let i = 0; i<inEdges.length; i++) {
-        let label = graph.edge(inEdges[i])
-        // TODO MERGING DELLE LABEL
+        let label =graph.edge(inEdges[i]);
         graph.removeEdge(inEdges[i].v, ej.v);
-        graph.setEdge(inEdges[i].v, ei.v, label) 
+        graph.setEdge(inEdges[i].v, ei.v, label); 
     }
 
     for (i = 0; i<outEdges.length; i++) {
-        // TODO MERGING DELLA LABEL
-        graph.removeEdge(ej.v, outEdges[i].w)
-        graph.setEdge(ei.w, outEdges[i].w, graph.edge(outEdges[i]))   
+        let label = graph.edge(outEdges[i]);
+        graph.removeEdge(ej.w, outEdges[i].w)
+        graph.setEdge(ei.w, outEdges[i].w, label); 
+        console.log("SET edge", ei.w, outEdges[i].w, label)
     }
 
     let mergeType = resultMerge(
@@ -170,11 +171,21 @@ let merge = (graph, ei, ej) => {
     endLabel.type = mergeType[1]
     
     graph.setNode(ei.w, endLabel)
-
-    if(ei.v !== ej.v && ei.w !==ej.v)
+    let removingLabel = graph.edge(ej);
+    let destinationLabel = graph.edge(ei);
+    let mergeOption = destinationLabel.mergeOption.filter(opt => removingLabel.mergeOption.includes(opt)); // Mi = Mi intersecato Mj
+    destinationLabel.mergeOption = mergeOption;
+    graph.setEdge(ei, destinationLabel);
+    assert(removingLabel != undefined, "REMOVING LABEL UNDEFINED")
+    assert(destinationLabel != undefined, "DESTIATION LABEL UNDEFINED");
+    if(ei.v !== ej.v && ei.w !==ej.v){ // if with double condition due the *undirected* graph
+        //assert(graph.nodeEdges(ej.v).length == 1, `ci sono ancora archi su v ${JSON.stringify(graph.nodeEdges(ej.v))} `);
         graph.removeNode(ej.v);
-    if(ei.v !== ej.w && ei.w !==ej.w)
+    }
+    if(ei.v !== ej.w && ei.w !==ej.w){
+        //assert(graph.nodeEdges(ej.w).length == 1, `ci sono ancora archi su w ${graph.nodeEdges(ej.v)}`);
         graph.removeNode(ej.w);
+    }
 }
 
 function phase1() {
@@ -298,53 +309,32 @@ function phase2(){
     let distance = graphlib.alg.floydWarshall(g, () => 1, (node) => g.nodeEdges(node)); //distance is a var used to compare actual distance with new one after merge
 
     for(let i = 0; i<edges.length; i++){
-        signale.await(`********Phase2 on ${edges[i].v} => ${edges[i].w}**********`);
         let edgeAttachment = g.edge(edges[i]) || {};
         edgeAttachment.mergeOption=[];
         g.setEdge(edges[i], edgeAttachment) // adding mergeOption to the existing label
-        for(let j = 0; j<2 /*edges.length*/; j++){
+        for(let j = 0; j<edges.length; j++){
             if(i === j) continue;
             let valid = true;
-            signale.watch("***** Edge1: ", edges[i], " Edge2: ", edges[j]);
             // Trace Preservation
             for(path in paths){
                 if(paths[path].includes(edges[i]) && paths[path].includes(edges[j])){
                     valid = false;
-                    signale.error("Unpassed trace preservation", path);
                     break;
                 }
             } 
             if(valid === false){
                 continue;
             }
-            signale.success("Passed trace preservation")
+
 
             //Distance and link endpoint compatibility
             if( !compatible(edges[i], edges[j]) ){
                 valid = false;
-                signale.error("Not passed compatbility");
             }else{
-                signale.success("Passed compatibility")
                 let serial = JSON.stringify(graphlib.json.write(g));
                 let copiedGraph = graphlib.json.read(JSON.parse(serial));
                 merge(copiedGraph, edges[i], edges[j]);
-                let newDistance = graphlib.alg.floydWarshall(copiedGraph, () => 1, (node) => g.nodeEdges(node)) // O(|V|^3)
-                /*/Producing data to graph
-                let _nodes = copiedGraph.nodes();
-                let _edges = copiedGraph.edges()
-                let _nodes_res = [];
-                for(let _i = 0; _i<_nodes.length; _i++){
-                    let _node = _nodes[_i];
-                    _nodes_res.push({id: _node, label: `${_node}\n${copiedGraph.node(_node).type || ""}`, group: `${copiedGraph.node(_node).type || ""}`});
-                }
-                let _edges_res = [];
-                for(_i = 0; _i<_edges.length; _i++){
-                    let _edge = _edges[_i];
-                    _edges_res.push({from: _edge.v, to: _edge.w});
-                }
-                console.log(JSON.stringify(_nodes_res));
-                console.log(JSON.stringify(_edges_res));
-                console.log(newDistance);*/
+                let newDistance = graphlib.alg.floydWarshall(copiedGraph, () => 1, (node) => copiedGraph.nodeEdges(node)) // O(|V|^3)
 
                 for(let i = 0; i<tracerouteData.length; i++){
                     let trace = tracerouteData[i];
@@ -352,16 +342,12 @@ function phase2(){
                     let to = getName(trace.to);
                     if(newDistance[from][to].distance != undefined && newDistance[from][to].distance !== distance[from][to].distance){
                         valid = false;
-                        signale.error("Unpassed distance on path", from, to, " Mi aspettavo ", distance[from][to].distance, "trovata", newDistance[from][to].distance);
-                        
-                        
                         break;
                     }
                 }
-                signale.success("Passed distance")
+
             }
             if(valid){
-                signale.success(`VALID TRUE - adding mergeOption`);
                 edgeAttachment.mergeOption.push(edges[j]);
                 g.setEdge(edges[i], edgeAttachment); // There is a control before that check that on edge E1 is not added E1 itself
             }
@@ -370,21 +356,33 @@ function phase2(){
 }
 
 function phase3() {
+    
 	let existMergeOption = () => {
-		return g.edges().findIndex(e => g.edge(e).mergeOption && g.edge(e).mergeOption.length > 0) != -1
+		return g.edges().filter(e =>{
+            console.log("i", i, "label of", e, "is", g.edge(e));
+            return g.edge(e).mergeOption && g.edge(e).mergeOption.length > 0
+        }).length > 0;
 	}
 
 	let findEdgeWithLessMergeOptions = (inRange) => {
-		return inRange.reduce((min, current) => g.edge(current).mergeOption.length < g.edge(min).mergeOption.length ? current : min, inRange[0])
+        let filtered = inRange
+                .filter(e => {
+                    return g.edge(e) && g.edge(e).mergeOption.length > 0
+                })
+        return filtered.reduce((min, current) => g.edge(current).mergeOption.length < g.edge(min).mergeOption.length ? current : min, filtered[0])
 	}
 
-
-	while (existMergeOption()) { //Pseudocode from the paper
-  		let ei = findEdgeWithLessMergeOptions(g.edges())
-  		let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
-    
+    let i = 0; // used only for debug prints
+    while (existMergeOption()) { //Pseudocode from the paper
+        i++;
+        let ei = findEdgeWithLessMergeOptions(g.edges())
+        let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
+        
+        assert(ei != undefined, "EI è undefined");
+        assert(ej != undefined, "EJ è undefined");
 		if (compatible(ei, ej)) {
-			merge(g, ei, ej)
+            merge(g, ei, ej);
+            
 		} else {
 			let mi = g.edge(ei).mergeOption
 			let mj = g.edge(ej).mergeOption
@@ -397,7 +395,10 @@ function phase3() {
 
 function iTop() {
     phase1();
+    //merge(g, { v: 'A1', w: 'R1' }, { v: 'A4', w: 'R1' });
     phase2();
+
+    phase3();
 };
 iTop();
 
@@ -457,9 +458,10 @@ app.get('/', (req, res) => {
     let edges_res = [];
     for(i = 0; i<edges.length; i++){
         let edge = edges[i];
-        edges_res.push({from: edge.v, to: edge.w, label: JSON.stringify(  g.edge(edges[i]).mergeOption  )});
+        edges_res.push({from: edge.v, to: edge.w, label: g.edge(edges[i]) ? JSON.stringify(  g.edge(edges[i]).mergeOption)  : "NO LABEL" });
     }
     res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
 })
 app.listen(3000, () => console.log('Example app listening on port 3000!'))
+
 
