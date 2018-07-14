@@ -127,7 +127,7 @@ function addHop(currentName, previousName, newNodeLabel, pathName){
     }
     let attachment = g.edge(previousName, currentName);
     if(attachment === undefined){
-        attachment = {path: [pathName]}
+        attachment = {path: [pathName], mergeOption: []}
     }else{
         attachment.path.push(pathName);
     }
@@ -135,27 +135,57 @@ function addHop(currentName, previousName, newNodeLabel, pathName){
 }
 
 let merge = (graph, ei, ej) => {
-  				/*All incident edges ej.v - filter by the edges that aren't the edge to merge - mapping in order to have the start as other node, not own*/
-    let inEdges = graph.nodeEdges(ej.v).map(e => e.w === ej.v ? e : {v: e.w, w: e.v}).filter(e => e.v != ei.w && e.v != ej.w); 
-    let outEdges = graph.nodeEdges(ej.w).map(e => e.v === ej.w ? e : {v: e.w, w: e.v}).filter(e => e.w != ej.v && e.w != ei.v);
+    /*
+        label = {path: [], mergeOption: []}
+    */
+
+  				/*All incident edges ej.v - mapping in order to have the start as other node, not own*/
+    let inEdges = graph.nodeEdges(ej.v).map(e => e.w === ej.v ? e : {v: e.w, w: e.v}); 
+    let outEdges = graph.nodeEdges(ej.w).map(e => e.v === ej.w ? e : {v: e.w, w: e.v});
     /*
         startLabel.id = ei.v.charAt(0) == "R" ? ei.v : ej.v;
         endLabel.id = ei.w.charAt(0) == "R" ? ei.w : ej.w;
     */
+
+    let is_ei = (edge) => {
+        return (edge.v == ei.v && edge.w == ei.w) || (edge.w == ei.v && edge.v == ei.w)
+    }
+
     for (let i = 0; i<inEdges.length; i++) {
-        let label =graph.edge(inEdges[i]);
+        let label = graph.edge(inEdges[i]);
         graph.removeEdge(inEdges[i].v, ej.v);
-        graph.setEdge(inEdges[i].v, ei.v, label); 
+        if(inEdges[i].v !== ei.v){ 
+            let resultLabel = label;
+            if(graph.hasEdge(inEdges[i].v, ei.v)){
+                let existingLabel = graph.edge(inEdges[i].v, ei.v);
+                resultLabel = {
+                    path: [...label.path, ...existingLabel.path],
+                    mergeOption: [...label.mergeOption, ...existingLabel.mergeOption]
+                }
+            }
+            graph.setEdge(inEdges[i].v, ei.v, resultLabel); 
+        } 
+        /* else ignore since the edge to add is ei.v -> ei.v */
     }
 
     for (i = 0; i<outEdges.length; i++) {
         let label = graph.edge(outEdges[i]);
         graph.removeEdge(ej.w, outEdges[i].w)
-        graph.setEdge(ei.w, outEdges[i].w, label); 
-        console.log("SET edge", ei.w, outEdges[i].w, label)
+        if(outEdges[i].w !== ei.w){
+            let resultLabel = label;
+            if(graph.hasEdge(ei.w, outEdges[i].w)){
+                let existingLabel_out = graph.edge(ei.w, outEdges[i].w);
+                resultLabel = {
+                    path: [...label.path, ...existingLabel_out.path],
+                    mergeOption: [...label.mergeOption, ...existingLabel_out.mergeOption]
+                }
+            }
+
+            graph.setEdge(ei.w, outEdges[i].w, resultLabel); 
+        }
     }
 
-    let mergeType = resultMerge(
+    let mergeType = resultMerge( // Tabellone del paper
         graph.node(ei.v).type,
         graph.node(ei.w).type,
         graph.node(ej.v).type,
@@ -163,29 +193,39 @@ let merge = (graph, ei, ej) => {
     )
     assert(mergeType != null, "MERGING TWO EDGE NOT VALID");
     // Reassign the nodes type
-    let startLabel = graph.node(ei.v)
-    startLabel.type = mergeType[0]
-    graph.setNode(ei.v, startLabel)
+     let startLabel = graph.node(ei.v)
+     startLabel.type = mergeType[0]
+     graph.setNode(ei.v, startLabel)
 
-    let endLabel = graph.node(ei.w)
-    endLabel.type = mergeType[1]
+     let endLabel = graph.node(ei.w)
+     endLabel.type = mergeType[1]
+     graph.setNode(ei.w, endLabel)
     
-    graph.setNode(ei.w, endLabel)
-    let removingLabel = graph.edge(ej);
-    let destinationLabel = graph.edge(ei);
-    let mergeOption = destinationLabel.mergeOption.filter(opt => removingLabel.mergeOption.includes(opt)); // Mi = Mi intersecato Mj
-    destinationLabel.mergeOption = mergeOption;
-    graph.setEdge(ei, destinationLabel);
-    assert(removingLabel != undefined, "REMOVING LABEL UNDEFINED")
-    assert(destinationLabel != undefined, "DESTIATION LABEL UNDEFINED");
     if(ei.v !== ej.v && ei.w !==ej.v){ // if with double condition due the *undirected* graph
         //assert(graph.nodeEdges(ej.v).length == 1, `ci sono ancora archi su v ${JSON.stringify(graph.nodeEdges(ej.v))} `);
         graph.removeNode(ej.v);
     }
-    if(ei.v !== ej.w && ei.w !==ej.w){
+    if(ei.v !== ej.w && ei.w !== ej.w){
         //assert(graph.nodeEdges(ej.w).length == 1, `ci sono ancora archi su w ${graph.nodeEdges(ej.v)}`);
         graph.removeNode(ej.w);
     }
+
+    let edges = graph.edges();
+    edges.forEach(edge => {
+        let label = graph.edge(edge);
+        label.mergeOption = label.mergeOption.map( opt => {
+            let result = {};
+            result.v = (opt.v == ej.v || opt.v == ej.w) ? ei.v : opt.v;
+            result.w = (opt.w == ej.v || opt.w == ej.w) ? ei.w : opt.w;
+            return result;
+        });
+        graph.setEdge(edge, label);
+    })
+
+    let label = graph.edge(ei);
+    console.log("ei", ei);
+    label.mergeOption = label.mergeOption.filter(e => !is_ei(e) );
+    graph.setEdge(ei, label);
 }
 
 function phase1() {
@@ -395,9 +435,9 @@ function phase3() {
 
 function iTop() {
     phase1();
-    //merge(g, { v: 'A1', w: 'R1' }, { v: 'A4', w: 'R1' });
+    
     phase2();
-
+    //merge(g, { v: 'A1', w: 'R1' }, { v: 'A4', w: 'R1' });
     phase3();
 };
 iTop();

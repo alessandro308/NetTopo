@@ -1,0 +1,25 @@
+
+
+On Mon, Dec 17, 2001 at 05:43:06PM -0800, Ratul Mahajan wrote:
+> who is molly? when do i get to meet her?
+
+molly is ally's friend that takes a list of routers
+and essentially runs ally over all unique pairs.
+same directory in cvs.
+
+> we could be smarter about redoing once we have numbers on the success and 
+> accuracy rate of various tests. 
+
+yes, validation is necessary at some point.
+
+> are there cases with ipid failing while others passing? i guess i could 
+> just run the query.
+
+those that aren't discriminating (return_ttl, out_ttl,
+and occasionally even cisco) do pass when ipid fails,
+but last I looked, none of the ip address based tests
+succeed when ipid fails.  I believe there are cases
+when the name suggests an alias, but ipid doesn't agree.
+I haven't looked into it too closely.
+
+-neil

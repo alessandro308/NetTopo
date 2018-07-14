@@ -9,8 +9,12 @@ html
         height: 90vh;
         border: 1px solid lightgray;
       }
+      img{
+        position: fixed
+      }
   body
     p The computed Layout Network
+    img(src="assets/net.png")
     div(id="mynetwork")
     script(type="text/javascript").
       var nodes = new vis.DataSet(!{nodes});

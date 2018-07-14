@@ -1,0 +1,5 @@
+http://cs-www.bu.edu/pub/imic/talks/govindan.ppt
+
+nothing special, but it confirmed what I suspected
+about alias resolution (the source is the outgoing
+interface address rather than a unique router identifier)
