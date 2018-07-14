@@ -1,0 +1,673 @@
+# Makefile.in generated automatically by automake 1.5 from Makefile.am.
+
+# Copyright 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001
+# Free Software Foundation, Inc.
+# This Makefile.in is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+
+
+SHELL = /bin/sh
+
+srcdir = .
+top_srcdir = .
+
+prefix = /usr/local
+exec_prefix = ${prefix}
+
+bindir = ${exec_prefix}/bin
+sbindir = ${exec_prefix}/sbin
+libexecdir = ${exec_prefix}/libexec
+datadir = ${prefix}/share
+sysconfdir = ${prefix}/etc
+sharedstatedir = ${prefix}/com
+localstatedir = ${prefix}/var
+libdir = ${exec_prefix}/lib
+infodir = ${prefix}/info
+mandir = ${prefix}/man
+includedir = ${prefix}/include
+oldincludedir = /usr/include
+pkgdatadir = $(datadir)/ally
+pkglibdir = $(libdir)/ally
+pkgincludedir = $(includedir)/ally
+top_builddir = .
+
+ACLOCAL = ${SHELL} /ally/missing --run aclocal
+AUTOCONF = ${SHELL} /ally/missing --run autoconf
+AUTOMAKE = ${SHELL} /ally/missing --run automake
+AUTOHEADER = ${SHELL} /ally/missing --run autoheader
+
+INSTALL = /usr/bin/install -c
+INSTALL_PROGRAM = ${INSTALL}
+INSTALL_DATA = ${INSTALL} -m 644
+INSTALL_SCRIPT = ${INSTALL}
+INSTALL_HEADER = $(INSTALL_DATA)
+transform = s,x,x,
+NORMAL_INSTALL = :
+PRE_INSTALL = :
+POST_INSTALL = :
+NORMAL_UNINSTALL = :
+PRE_UNINSTALL = :
+POST_UNINSTALL = :
+host_alias = 
+host_triplet = x86_64-unknown-linux-gnu
+AMTAR = ${SHELL} /ally/missing --run tar
+AWK = mawk
+CC = gcc
+CVSCL = 
+DBPROGS = 
+DEPDIR = .deps
+DOT = 
+EXEEXT = 
+GETOPT_OBJ = 
+GETOPT_SRC = 
+INSTALL_STRIP_PROGRAM = ${SHELL} $(install_sh) -c -s
+ISODATE = 2018-07-13
+LINT = 
+OBJEXT = o
+PACKAGE = ally
+RANLIB = ranlib
+VERSION = 0.1.0
+am__include = include
+am__quote = 
+install_sh = /ally/install-sh
+
+SUBDIRS = adt
+noinst_PROGRAMS = check_ttl_hash
+TESTS = check_ttl_hash
+bin_PROGRAMS = ally 
+EXTRA_PROGRAMS = molly show_aliases recheck_aliases dumpcch
+ally_SOURCES = ally.c ally_main.c
+ally_LDADD = -L./adt -ladt -lgadt
+ally_DEPENDENCIES = $(srcdir)/adt
+molly_SOURCES = molly.c  ally.c alias_matrix.c alias_matrix.h ttl_hashtable.c ttl_hashtable.h commandline.c commandline.h
+molly_LDADD = -L./adt -ladt -lgadt
+molly_DEPENDENCIES = $(srcdir)/adt
+show_aliases_SOURCES = show_aliases.c alias_matrix.c alias_matrix.h commandline.c commandline.h
+show_aliases_LDADD = -L./adt -ladt -lgadt
+show_aliases_DEPENDENCIES = $(srcdir)/adt
+recheck_aliases_SOURCES = recheck_aliases.c alias_matrix.c alias_matrix.h commandline.c commandline.h ally.c ally.h
+recheck_aliases_LDADD = -L./adt -ladt -lgadt
+recheck_aliases_DEPENDENCIES = $(srcdir)/adt
+dumpcch_SOURCES = dumpcch.c  commandline.c alias_matrix.c alias_matrix.h
+dumpcch_LDADD = -L./adt -ladt -lgadt
+dumpcch_DEPENDENCIES = $(srcdir)/adt
+check_ttl_hash_SOURCES = check_ttl_hash.c ttl_hashtable.c
+check_ttl_hash_LDADD = -L./adt -ladt -lgadt
+check_ttl_hash_DEPENDENCIES = $(srcdir)/adt
+AM_CFLAGS = -I$(srcdir)/adt -Iadt -I/usr/include/postgresql
+
+EXTRA_DIST = ChangeLog doc
+
+#  if you write a self-test script named `chk', uncomment the
+#  following and add `chk' to the EXTRA_DIST list
+#TESTS=chk
+
+#cruft cruft cruft cruft cruft cruft cruft cruft cruft cruft
+# use autoreconf -i to regenerate all of this crap.
+MAINTAINERCLEANFILES = Makefile.in INSTALL config.guess config.sub depcomp \
+	                   install-sh missing mkinstalldirs config.log config.cache \
+	                   stamp-h.in aclocal.m4 config.h.in config.status configure \
+	                   ChangeLog
+
+
+MOSTLYCLEANFILES = *.lint
+
+ETAGS_ARGS = 
+subdir = .
+ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
+CONFIG_HEADER = config.h
+CONFIG_CLEAN_FILES =
+EXTRA_PROGRAMS = molly$(EXEEXT) show_aliases$(EXEEXT) \
+	recheck_aliases$(EXEEXT) dumpcch$(EXEEXT)
+bin_PROGRAMS = ally$(EXEEXT) 
+noinst_PROGRAMS = check_ttl_hash$(EXEEXT)
+PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
+
+am_ally_OBJECTS = ally.$(OBJEXT) ally_main.$(OBJEXT)
+ally_OBJECTS = $(am_ally_OBJECTS)
+ally_LDFLAGS =
+am_check_ttl_hash_OBJECTS = check_ttl_hash.$(OBJEXT) \
+	ttl_hashtable.$(OBJEXT)
+check_ttl_hash_OBJECTS = $(am_check_ttl_hash_OBJECTS)
+check_ttl_hash_LDFLAGS =
+am_dumpcch_OBJECTS = dumpcch.$(OBJEXT) commandline.$(OBJEXT) \
+	alias_matrix.$(OBJEXT)
+dumpcch_OBJECTS = $(am_dumpcch_OBJECTS)
+dumpcch_LDFLAGS =
+am_molly_OBJECTS = molly.$(OBJEXT) ally.$(OBJEXT) alias_matrix.$(OBJEXT) \
+	ttl_hashtable.$(OBJEXT) commandline.$(OBJEXT)
+molly_OBJECTS = $(am_molly_OBJECTS)
+molly_LDFLAGS =
+am_recheck_aliases_OBJECTS = recheck_aliases.$(OBJEXT) \
+	alias_matrix.$(OBJEXT) commandline.$(OBJEXT) ally.$(OBJEXT)
+recheck_aliases_OBJECTS = $(am_recheck_aliases_OBJECTS)
+recheck_aliases_LDFLAGS =
+am_show_aliases_OBJECTS = show_aliases.$(OBJEXT) alias_matrix.$(OBJEXT) \
+	commandline.$(OBJEXT)
+show_aliases_OBJECTS = $(am_show_aliases_OBJECTS)
+show_aliases_LDFLAGS =
+
+DEFS = -DHAVE_CONFIG_H
+DEFAULT_INCLUDES =  -I. -I$(srcdir) -I.
+CPPFLAGS = 
+LDFLAGS = 
+LIBS = -lpthread 
+depcomp = $(SHELL) $(top_srcdir)/depcomp
+DEP_FILES = $(DEPDIR)/alias_matrix.Po $(DEPDIR)/ally.Po \
+	$(DEPDIR)/ally_main.Po $(DEPDIR)/check_ttl_hash.Po \
+	$(DEPDIR)/commandline.Po $(DEPDIR)/dumpcch.Po \
+	$(DEPDIR)/molly.Po $(DEPDIR)/recheck_aliases.Po \
+	$(DEPDIR)/show_aliases.Po \
+	$(DEPDIR)/ttl_hashtable.Po
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+CFLAGS = -g -O2
+DIST_SOURCES = $(ally_SOURCES) $(check_ttl_hash_SOURCES) \
+	$(dumpcch_SOURCES) $(molly_SOURCES) $(recheck_aliases_SOURCES) \
+	$(show_aliases_SOURCES)
+
+RECURSIVE_TARGETS = info-recursive dvi-recursive install-info-recursive \
+	uninstall-info-recursive all-recursive install-data-recursive \
+	install-exec-recursive installdirs-recursive install-recursive \
+	uninstall-recursive check-recursive installcheck-recursive
+DIST_COMMON = README ./stamp-h.in AUTHORS COPYING ChangeLog INSTALL \
+	Makefile.am Makefile.in NEWS acconfig.h aclocal.m4 config.guess \
+	config.h.in config.sub configure configure.in depcomp \
+	install-sh missing mkinstalldirs
+DIST_SUBDIRS = $(SUBDIRS)
+SOURCES = $(ally_SOURCES) $(check_ttl_hash_SOURCES) $(dumpcch_SOURCES) $(molly_SOURCES) $(recheck_aliases_SOURCES) $(show_aliases_SOURCES)
+
+all: config.h
+	$(MAKE) $(AM_MAKEFLAGS) all-recursive
+
+.SUFFIXES:
+.SUFFIXES: .c .o .obj
+$(srcdir)/Makefile.in:  Makefile.am  $(top_srcdir)/configure.in $(ACLOCAL_M4)
+	cd $(top_srcdir) && \
+	  $(AUTOMAKE) --gnu  Makefile
+Makefile:  $(srcdir)/Makefile.in  $(top_builddir)/config.status
+	cd $(top_builddir) && \
+	  CONFIG_HEADERS= CONFIG_LINKS= \
+	  CONFIG_FILES=$@ $(SHELL) ./config.status
+
+$(top_builddir)/config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+	$(SHELL) ./config.status --recheck
+$(srcdir)/configure:  $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+	cd $(srcdir) && $(AUTOCONF)
+
+$(ACLOCAL_M4):  configure.in 
+	cd $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
+config.h: stamp-h
+	@if test ! -f $@; then \
+		rm -f stamp-h; \
+		$(MAKE) stamp-h; \
+	else :; fi
+stamp-h: $(srcdir)/config.h.in $(top_builddir)/config.status
+	@rm -f stamp-h stamp-hT
+	@echo timestamp > stamp-hT 2> /dev/null
+	cd $(top_builddir) \
+	  && CONFIG_FILES= CONFIG_HEADERS=config.h \
+	     $(SHELL) ./config.status
+	@mv stamp-hT stamp-h
+$(srcdir)/config.h.in:  $(srcdir)/./stamp-h.in
+	@if test ! -f $@; then \
+		rm -f $(srcdir)/./stamp-h.in; \
+		$(MAKE) $(srcdir)/./stamp-h.in; \
+	else :; fi
+$(srcdir)/./stamp-h.in: $(top_srcdir)/configure.in $(ACLOCAL_M4) $(top_srcdir)/acconfig.h
+	@rm -f $(srcdir)/./stamp-h.in $(srcdir)/./stamp-h.inT
+	@echo timestamp > $(srcdir)/./stamp-h.inT 2> /dev/null
+	cd $(top_srcdir) && $(AUTOHEADER)
+	@mv $(srcdir)/./stamp-h.inT $(srcdir)/./stamp-h.in
+
+distclean-hdr:
+	-rm -f config.h
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
+	  if test -f $$p \
+	  ; then \
+	    f=`echo $$p1|sed '$(transform);s/$$/$(EXEEXT)/'`; \
+	   echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/$$f"; \
+	   $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$p $(DESTDIR)$(bindir)/$$f; \
+	  else :; fi; \
+	done
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+	  f=`echo $$p|sed 's/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
+	  echo " rm -f $(DESTDIR)$(bindir)/$$f"; \
+	  rm -f $(DESTDIR)$(bindir)/$$f; \
+	done
+
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+
+clean-noinstPROGRAMS:
+	-test -z "$(noinst_PROGRAMS)" || rm -f $(noinst_PROGRAMS)
+ally$(EXEEXT): $(ally_OBJECTS) $(ally_DEPENDENCIES) 
+	@rm -f ally$(EXEEXT)
+	$(LINK) $(ally_LDFLAGS) $(ally_OBJECTS) $(ally_LDADD) $(LIBS)
+check_ttl_hash$(EXEEXT): $(check_ttl_hash_OBJECTS) $(check_ttl_hash_DEPENDENCIES) 
+	@rm -f check_ttl_hash$(EXEEXT)
+	$(LINK) $(check_ttl_hash_LDFLAGS) $(check_ttl_hash_OBJECTS) $(check_ttl_hash_LDADD) $(LIBS)
+dumpcch$(EXEEXT): $(dumpcch_OBJECTS) $(dumpcch_DEPENDENCIES) 
+	@rm -f dumpcch$(EXEEXT)
+	$(LINK) $(dumpcch_LDFLAGS) $(dumpcch_OBJECTS) $(dumpcch_LDADD) $(LIBS)
+molly$(EXEEXT): $(molly_OBJECTS) $(molly_DEPENDENCIES) 
+	@rm -f molly$(EXEEXT)
+	$(LINK) $(molly_LDFLAGS) $(molly_OBJECTS) $(molly_LDADD) $(LIBS)
+recheck_aliases$(EXEEXT): $(recheck_aliases_OBJECTS) $(recheck_aliases_DEPENDENCIES) 
+	@rm -f recheck_aliases$(EXEEXT)
+	$(LINK) $(recheck_aliases_LDFLAGS) $(recheck_aliases_OBJECTS) $(recheck_aliases_LDADD) $(LIBS)
+show_aliases$(EXEEXT): $(show_aliases_OBJECTS) $(show_aliases_DEPENDENCIES) 
+	@rm -f show_aliases$(EXEEXT)
+	$(LINK) $(show_aliases_LDFLAGS) $(show_aliases_OBJECTS) $(show_aliases_LDADD) $(LIBS)
+
+mostlyclean-compile:
+	-rm -f *.$(OBJEXT) core *.core
+
+distclean-compile:
+	-rm -f *.tab.c
+
+include $(DEPDIR)/alias_matrix.Po
+include $(DEPDIR)/ally.Po
+include $(DEPDIR)/ally_main.Po
+include $(DEPDIR)/check_ttl_hash.Po
+include $(DEPDIR)/commandline.Po
+include $(DEPDIR)/dumpcch.Po
+include $(DEPDIR)/molly.Po
+include $(DEPDIR)/recheck_aliases.Po
+include $(DEPDIR)/show_aliases.Po
+include $(DEPDIR)/ttl_hashtable.Po
+
+distclean-depend:
+	-rm -rf $(DEPDIR)
+
+.c.o:
+	source='$<' object='$@' libtool=no \
+	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' \
+	$(CCDEPMODE) $(depcomp) \
+	$(COMPILE) -c `test -f $< || echo '$(srcdir)/'`$<
+
+.c.obj:
+	source='$<' object='$@' libtool=no \
+	depfile='$(DEPDIR)/$*.Po' tmpdepfile='$(DEPDIR)/$*.TPo' \
+	$(CCDEPMODE) $(depcomp) \
+	$(COMPILE) -c `cygpath -w $<`
+CCDEPMODE = depmode=gcc3
+uninstall-info-am:
+
+# This directory's subdirectories are mostly independent; you can cd
+# into them and run `make' without going through this Makefile.
+# To change the values of `make' variables: instead of editing Makefiles,
+# (1) if the variable is set in `config.status', edit `config.status'
+#     (which will cause the Makefiles to be regenerated when you run `make');
+# (2) otherwise, pass the desired values on the `make' command line.
+$(RECURSIVE_TARGETS):
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-am" || exit 1; \
+	fi; test -z "$$fail"
+
+mostlyclean-recursive clean-recursive distclean-recursive \
+maintainer-clean-recursive:
+	@set fnord $(MAKEFLAGS); amf=$$2; \
+	dot_seen=no; \
+	case "$@" in \
+	  distclean-* | maintainer-clean-*) list='$(DIST_SUBDIRS)' ;; \
+	  *) list='$(SUBDIRS)' ;; \
+	esac; \
+	rev=''; for subdir in $$list; do \
+	  if test "$$subdir" = "."; then :; else \
+	    rev="$$subdir $$rev"; \
+	  fi; \
+	done; \
+	rev="$$rev ."; \
+	target=`echo $@ | sed s/-recursive//`; \
+	for subdir in $$rev; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    local_target="$$target-am"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	   || case "$$amf" in *=*) exit 1;; *k*) fail=yes;; *) exit 1;; esac; \
+	done && test -z "$$fail"
+tags-recursive:
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  test "$$subdir" = . || (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) tags); \
+	done
+
+tags: TAGS
+
+ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	mkid -fID $$unique $(LISP)
+
+TAGS: tags-recursive $(HEADERS) $(SOURCES) config.h.in $(TAGS_DEPENDENCIES) \
+		$(TAGS_FILES) $(LISP)
+	tags=; \
+	here=`pwd`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  if test "$$subdir" = .; then :; else \
+	    test -f $$subdir/TAGS && tags="$$tags -i $$here/$$subdir/TAGS"; \
+	  fi; \
+	done; \
+	list='$(SOURCES) $(HEADERS) $(TAGS_FILES)'; \
+	unique=`for i in $$list; do \
+	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
+	  done | \
+	  $(AWK) '    { files[$$0] = 1; } \
+	       END { for (i in files) print i; }'`; \
+	test -z "$(ETAGS_ARGS)config.h.in$$unique$(LISP)$$tags" \
+	  || etags $(ETAGS_ARGS) $$tags config.h.in $$unique $(LISP)
+
+GTAGS:
+	here=`CDPATH=: && cd $(top_builddir) && pwd` \
+	  && cd $(top_srcdir) \
+	  && gtags -i $(GTAGS_ARGS) $$here
+
+distclean-tags:
+	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH
+
+check-TESTS: $(TESTS)
+	@failed=0; all=0; xfail=0; xpass=0; \
+	srcdir=$(srcdir); export srcdir; \
+	list='$(TESTS)'; \
+	if test -n "$$list"; then \
+	  for tst in $$list; do \
+	    if test -f ./$$tst; then dir=./; \
+	    elif test -f $$tst; then dir=; \
+	    else dir="$(srcdir)/"; fi; \
+	    if $(TESTS_ENVIRONMENT) $${dir}$$tst; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+	        xpass=`expr $$xpass + 1`; \
+	        failed=`expr $$failed + 1`; \
+	        echo "XPASS: $$tst"; \
+	      ;; \
+	      *) \
+	        echo "PASS: $$tst"; \
+	      ;; \
+	      esac; \
+	    elif test $$? -ne 77; then \
+	      all=`expr $$all + 1`; \
+	      case " $(XFAIL_TESTS) " in \
+	      *" $$tst "*) \
+	        xfail=`expr $$xfail + 1`; \
+	        echo "XFAIL: $$tst"; \
+	      ;; \
+	      *) \
+	        failed=`expr $$failed + 1`; \
+	        echo "FAIL: $$tst"; \
+	      ;; \
+	      esac; \
+	    fi; \
+	  done; \
+	  if test "$$failed" -eq 0; then \
+	    if test "$$xfail" -eq 0; then \
+	      banner="All $$all tests passed"; \
+	    else \
+	      banner="All $$all tests behaved as expected ($$xfail expected failures)"; \
+	    fi; \
+	  else \
+	    if test "$$xpass" -eq 0; then \
+	      banner="$$failed of $$all tests failed"; \
+	    else \
+	      banner="$$failed of $$all tests did not behave as expected ($$xpass unexpected passes)"; \
+	    fi; \
+	  fi; \
+	  dashes=`echo "$$banner" | sed s/./=/g`; \
+	  echo "$$dashes"; \
+	  echo "$$banner"; \
+	  echo "$$dashes"; \
+	  test "$$failed" -eq 0; \
+	fi
+
+DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
+
+top_distdir = .
+# Avoid unsightly `./'.
+distdir = $(PACKAGE)-$(VERSION)
+
+GZIP_ENV = --best
+
+distdir: $(DISTFILES)
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+	mkdir $(distdir)
+	@for file in $(DISTFILES); do \
+	  if test -f $$file; then d=.; else d=$(srcdir); fi; \
+	  dir=`echo "$$file" | sed -e 's,/[^/]*$$,,'`; \
+	  if test "$$dir" != "$$file" && test "$$dir" != "."; then \
+	    $(mkinstalldirs) "$(distdir)/$$dir"; \
+	  fi; \
+	  if test -d $$d/$$file; then \
+	    cp -pR $$d/$$file $(distdir) \
+	    || exit 1; \
+	  else \
+	    test -f $(distdir)/$$file \
+	    || cp -p $$d/$$file $(distdir)/$$file \
+	    || exit 1; \
+	  fi; \
+	done
+	for subdir in $(SUBDIRS); do \
+	  if test "$$subdir" = .; then :; else \
+	    test -d $(distdir)/$$subdir \
+	    || mkdir $(distdir)/$$subdir \
+	    || exit 1; \
+	    (cd $$subdir && \
+	      $(MAKE) $(AM_MAKEFLAGS) \
+	        top_distdir="$(top_distdir)" \
+	        distdir=../$(distdir)/$$subdir \
+	        distdir) \
+	      || exit 1; \
+	  fi; \
+	done
+	-find $(distdir) -type d ! -perm -777 -exec chmod a+rwx {} \; -o \
+	  ! -type d ! -perm -444 -links 1 -exec chmod a+r {} \; -o \
+	  ! -type d ! -perm -400 -exec chmod a+r {} \; -o \
+	  ! -type d ! -perm -444 -exec $(SHELL) $(install_sh) -c -m a+r {} {} \; \
+	|| chmod -R a+r $(distdir)
+dist: distdir
+	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+
+# This target untars the dist file and tries a VPATH configuration.  Then
+# it guarantees that the distribution is self-contained by making another
+# tarfile.
+distcheck: dist
+	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
+	GZIP=$(GZIP_ENV) gunzip -c $(distdir).tar.gz | $(AMTAR) xf -
+	chmod -R a-w $(distdir); chmod a+w $(distdir)
+	mkdir $(distdir)/=build
+	mkdir $(distdir)/=inst
+	chmod a-w $(distdir)
+	dc_install_base=`CDPATH=: && cd $(distdir)/=inst && pwd` \
+	  && cd $(distdir)/=build \
+	  && ../configure --srcdir=.. --prefix=$$dc_install_base \
+	  && $(MAKE) $(AM_MAKEFLAGS) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dvi \
+	  && $(MAKE) $(AM_MAKEFLAGS) check \
+	  && $(MAKE) $(AM_MAKEFLAGS) install \
+	  && $(MAKE) $(AM_MAKEFLAGS) installcheck \
+	  && $(MAKE) $(AM_MAKEFLAGS) uninstall \
+	  && (test `find $$dc_install_base -type f -print | wc -l` -le 1 \
+	     || (echo "Error: files left after uninstall" 1>&2; \
+	         exit 1) ) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dist \
+	  && $(MAKE) $(AM_MAKEFLAGS) distclean \
+	  && rm -f $(distdir).tar.gz \
+	  && (test `find . -type f -print | wc -l` -eq 0 \
+	     || (echo "Error: files left after distclean" 1>&2; \
+	         exit 1) )
+	-chmod -R a+w $(distdir) > /dev/null 2>&1; rm -rf $(distdir)
+	@echo "$(distdir).tar.gz is ready for distribution" | \
+	  sed 'h;s/./=/g;p;x;p;x'
+check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
+check: check-recursive
+all-am: Makefile $(PROGRAMS) config.h
+installdirs: installdirs-recursive
+installdirs-am:
+	$(mkinstalldirs) $(DESTDIR)$(bindir)
+
+install: install-recursive
+install-exec: install-exec-recursive
+install-data: install-data-recursive
+uninstall: uninstall-recursive
+
+install-am: all-am
+	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
+
+installcheck: installcheck-recursive
+install-strip:
+	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
+	  `test -z '$(STRIP)' || \
+	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
+mostlyclean-generic:
+	-test -z "$(MOSTLYCLEANFILES)" || rm -f $(MOSTLYCLEANFILES)
+
+clean-generic:
+
+distclean-generic:
+	-rm -f Makefile $(CONFIG_CLEAN_FILES) stamp-h stamp-h[0-9]*
+clean: clean-recursive
+
+clean-am: clean-binPROGRAMS clean-generic clean-noinstPROGRAMS \
+	mostlyclean-am
+
+dist-all: distdir
+	$(AMTAR) chof - $(distdir) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
+	-chmod -R a+w $(distdir) >/dev/null 2>&1; rm -rf $(distdir)
+distclean: distclean-recursive
+	-rm -f config.status config.cache config.log
+distclean-am: clean-am distclean-compile distclean-depend \
+	distclean-generic distclean-hdr distclean-tags
+
+dvi: dvi-recursive
+
+dvi-am:
+
+info: info-recursive
+
+info-am:
+
+install-data-am:
+
+install-exec-am: install-binPROGRAMS
+
+install-info: install-info-recursive
+
+install-man:
+
+installcheck-am:
+
+maintainer-clean: maintainer-clean-recursive
+
+maintainer-clean-am: distclean-am maintainer-clean-generic
+
+mostlyclean: mostlyclean-recursive
+
+mostlyclean-am: mostlyclean-compile mostlyclean-generic
+
+uninstall-am: uninstall-binPROGRAMS uninstall-info-am
+
+uninstall-info: uninstall-info-recursive
+
+.PHONY: $(RECURSIVE_TARGETS) GTAGS all all-am check check-TESTS check-am \
+	clean clean-binPROGRAMS clean-generic clean-noinstPROGRAMS \
+	clean-recursive dist dist-all distcheck distclean \
+	distclean-compile distclean-depend distclean-generic \
+	distclean-hdr distclean-recursive distclean-tags distdir dvi \
+	dvi-am dvi-recursive info info-am info-recursive install \
+	install-am install-binPROGRAMS install-data install-data-am \
+	install-data-recursive install-exec install-exec-am \
+	install-exec-recursive install-info install-info-am \
+	install-info-recursive install-man install-recursive \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am installdirs-recursive maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive mostlyclean \
+	mostlyclean-compile mostlyclean-generic mostlyclean-recursive \
+	tags tags-recursive uninstall uninstall-am \
+	uninstall-binPROGRAMS uninstall-info-am \
+	uninstall-info-recursive uninstall-recursive
+
+
+suid: all
+	sudo chown root ./ally ./molly ./recheck_aliases
+	sudo chmod u+s ./ally ./molly ./recheck_aliases
+
+maintainer-clean-generic: distclean-generic
+	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
+
+# %.o in there to make sure the .c file's dependencies are tracked too.
+# test $@ -nt $< || \
+
+%.lint: %.c %.o
+	@echo linting $<
+	$(LINT) +posixlib -exportlocal $(AM_CFLAGS) $(DEFS) $(DEFAULT_INCLUDES) $< | tee $@ \
+	|| rm $@
+
+lint: $(patsubst %.c,%.lint,$(ally_SOURCES) $(molly_SOURCES))
+
+dist-hook-local: ChangeLog
+
+ChangeLog: configure Makefile.in Makefile.am
+	@if [ -z "$(CVSCL)" ]; then \
+	  echo cvs2cl is missing on your system, so no new ChangeLog for you; \
+		touch ChangeLog; \
+	else \
+		$(CVSCL) -l "-d2001-10-15" -I .cvsignore --window 360 --prune; \
+	   echo done with ChangeLog; \
+	fi;
+
+%.eps: %.jgr
+	jgraph $< > $@
+%.png: %.xpm
+	convert $< $@
+%.ps: %.jgr
+	jgraph -P $< > $@
+
+%.E: %.c
+	$(CC) -E $(INCLUDES) $(DEFS) $(AM_CFLAGS) $< > $@
+
+# not needed.
+#routers.lst: MakeRoutersLst.sh
+#	 ./MakeRoutersLst.sh
+# Tell versions [3.59,3.63) of GNU make to not export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

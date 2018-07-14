@@ -1,0 +1,76 @@
+Ally the Alias Resolver.
+
+looks at 2 ip's, then
+1) sends udp datagrams to both, and  recoups icmp port unreachables
+2) prints the ip ids of the unreachables
+3) prints the source ips of the unreachables
+4) prints the ttls of the unreachables.
+
+SAMPLE OUTPUT:
+pumpkin:~/wetherall/ally> ./ally 128.95.4.100 128.95.3.100
+0: from 128.95.4.100: id 63030, ttl 60/64
+1: from 128.95.3.100: id 63031, ttl 60/64
+2: from 128.95.4.100: id 63042, ttl 60/64
+ip1=128.95.4.100 ip2=128.95.3.100 ipid return_ttl out_ttl !same_ip !b_returns_a !a_returns_b !cisco
+
+Each of the three responses is listed.  0 and 2 come from
+the first IP listed, 1 (and 3 if present) come from the
+second IP.  The source address of the unreachables is
+listed, so you might see different IP's there.  id
+(eg. 63030) is the IP id on the response.  ttl is first the
+outgoing ttl / the return ttl.  The outgoing ttl is from the
+encapsulated packet.
+
+The summary line at the bottom is a list of which heuristics 
+matched. ipid, return_ttl, and out_ttl matched.  Those prefaced
+by ! did not.
+
+HEURISTICS:
+ipid: when the router is responsive, send consecutive packets to 
+ ip1 and ip2.  If within 1000, send another to the one that responded
+ first.  If the IP ID's are in order, it's a match.
+
+ If only one address is responsive, send reordered consecutive
+ packets.  If again, only the first packet gets a response, flag
+ it as a rate-limiting router (cisco), and if the IP id's are close,
+ flag it as an alias.  ** this is the weakest match in the bunch **
+
+out_ttl: the outgoing packets had the same ttl when they reached the
+ router.  this is pretty much useless.
+
+return_ttl: the returned packets had the same ttl.  this is often 
+ helpful, because most aliases will choose the same path to get their
+ response back to you.
+ 
+same_ip: both responses had the same source IP address.  (this suggests
+ a router that stamps outgoing port unreachable messages with the 
+ source address.
+
+a_returns_b: the response to the packet sent to ip1 had a source address
+ of ip2.  Does not imply same_ip, as the packet sent to ip2 might come
+ back with something different.
+
+b_returns_a: the converse of a_returns_b
+
+cisco: rate limited response pattern.  inexact.  cisco and ipid imply
+ the weaker ipid check was used.
+
+OTHER TOOLS:
+These tools require a mapping database, and are probably
+useless outside UW.
+
+molly.c contains the policy for choosing which addresses
+to probe, but requires the list of addresses (and names)
+and past results that we store in postgresql; I'm not sure
+if that can integrate or port to whever back-end you use.
+
+show_aliases computes the transitive closure over the
+database of cached results to make a table mapping interface
+addresses to small unique integers.
+
+recheck_aliases finds all pairs we thought were aliases
+and probes them again.
+
+
+ 
+

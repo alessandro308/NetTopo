@@ -1,0 +1,15 @@
+in the ally part of the repository is a tool called
+"show_aliases" that applies the transitive closure from
+the results put in the database by molly.
+
+It doesn't generate any tables yet.  It can take a
+little while to run and consumes a little memory.
+feedback welcome.
+
+note: the following are aliases:
+157.238.107.53 d1-6-5.a00.syrcny01.us.ra.verio.net (931)
+157.238.104.45 d1-5-7.a00.syrcny01.us.ra.verio.net (932)
+129.250.114.82 d3-4-0-0.a01.syrcny01.us.ra.verio.net (934)
+
+perhaps the "a" is for "area"?
+

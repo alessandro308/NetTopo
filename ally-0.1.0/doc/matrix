@@ -1,0 +1,75 @@
+(an early email while developing that describes the
+matrix)
+
+
+Ok.  The current scheme is the following.  The minimum
+number of tests that must be made to resolve all ips to
+their aliased routers is N_routers^2 + N_interfaces...
+I think.  This should be closer to 10K than 160K.
+
+The bullshit theory framework is a graph coloring problem.
+Each address is a node.  The graph is fully connected,
+and starts out colored black (don't know).  A discovered
+alias colors the edge between nodes red.  Since "alias"
+is an equivalence relation, additional red edges can be
+drawn to complete the transitive closure.  When an alias
+is disproven, green edges can be drawn between all nodes
+that represent both routers.  There's a little more to it
+than this, and I'm pretty sure there's a more convenient
+way to express the problem in theory land, but I can at
+least reason about how to implement this.
+
+So, the simple scheme is to pick a black edge, color it
+red or green by using ally, then color related edges green
+or red using the fact that red is transitive (a aliases b
+and b aliases c, so a aliases c.  if a does not alias d,
+neither do b or c.  if a also does not alias e, that means
+nothing for d-e.)
+
+The improvement is to try edges that look like they should
+be red first.  So, the first step is to sort all ip/name
+pairs by reversed hostname to group aliases close.  I know
+it doesn't handle verio's scheme specifically, but it's
+nice and general.  The second step is to iterate through
+this list, checking adjacent nodes.  Then, iterate though
+nearby clusters that haven't been colored.
+
+This doesn't automatically de-alias based on return-ttl,
+so it will do stupid things like try all routers in japan
+against all routers, well, not in japan.
+
+I want to cache ally's results in the database in the
+process so that additional routers can be managed easily.
+
+-neil
+
+
+On Thu, Dec 13, 2001 at 10:46:09PM -0800, Ratul Mahajan wrote:
+> 
+> yeah. was curious how much it helped. its got some 100K+ entries in it.
+> 
+> > sorry.. am working on aliases.
+> hows that coming along? i am excited about alias resolution; we have a 
+> real shot at having the first words on it since ramesh said something 
+> about 2 yrs ago. ppl have been using ramesh's trick.
+> 
+> 	-- ratul
+> 
+> On Thu, 13 Dec 2001, Neil T Spring wrote:
+> 
+> > sorry.. am working on aliases.
+> > 
+> > this is the list of jobs that does not need to be done in
+> > the (ingress -> router) tests?
+> > 
+> > will look at it later tonight or tomorrow.
+> > 
+> > --neil
+> > 
+> > On Thu, Dec 13, 2001 at 10:37:26PM -0800, Ratul Mahajan wrote:
+> > > 
+> > > how much did it help? are there more traces that you would like to 
+> > > process?
+> > > 
+> > > 	-- ratul
+> > 

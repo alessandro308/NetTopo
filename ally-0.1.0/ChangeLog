@@ -1,0 +1,782 @@
+2002-04-05 23:24  nspring
+
+	* README: extra detail
+
+2002-04-05 23:04  nspring
+
+	* adt/: getopt.c, getopt.h, getopt1.c: needed for bsd
+
+2002-04-05 23:02  nspring
+
+	* README: spellling_correction
+
+2002-04-05 22:55  nspring
+
+	* ally.c, ally_main.c, configure.in, adt/Makefile.am,
+	adt/hashtable.c, adt/nscommon.h, adt/queue.c, adt/red_transitive.c,
+	adt/sprinter.c, adt/string_bindings.c, adt/test_eventqueue.c,
+	adt/test_set.c: fixes to support FreeBSD 3.4 (june)
+
+2002-04-05 14:44  nspring
+
+	* AUTHORS, COPYING, acconfig.h, alias_matrix.c, alias_matrix.h,
+	ally.c, ally.h, ally_main.c, check_ttl_hash.c, commandline.c,
+	commandline.h, dumpcch.c, molly.c, recheck_aliases.c,
+	show_aliases.c, ttl_hashtable.c, ttl_hashtable.h, adt/alert.c,
+	adt/alert.h, adt/bench-recursively.c, adt/buffer.c, adt/buffer.h,
+	adt/check_si.c, adt/check_string_bind.c, adt/check_typed_hash.c,
+	adt/commando.c, adt/commando.h, adt/disjoint_set.c,
+	adt/disjoint_set.h, adt/distribution.c, adt/distribution.h,
+	adt/eventqueue.c, adt/eventqueue.h, adt/graph_ts.c, adt/graph_ts.h,
+	adt/graphing_ts.c, adt/graphing_ts.h, adt/hashes.c, adt/hashes.h,
+	adt/hashtable.c, adt/hashtable.h, adt/hprop.c, adt/hprop.h,
+	adt/hpropinterface.c, adt/hpropinterface.h, adt/join.c, adt/join.h,
+	adt/link_matrix.c, adt/link_matrix.h, adt/nscommon.h,
+	adt/postgresql.c, adt/postgresql.h, adt/progress.c, adt/progress.h,
+	adt/queue.c, adt/queue.h, adt/recursively.c, adt/recursively.h,
+	adt/red_transitive.c, adt/red_transitive.h, adt/set.c, adt/set.h,
+	adt/snprintf.c, adt/sockaddr.c, adt/sorted_intlist.c,
+	adt/sorted_intlist.h, adt/sorted_stringlist.c,
+	adt/sorted_stringlist.h, adt/sprinter.c, adt/sprinter.h,
+	adt/string_bindings.c, adt/string_bindings.h, adt/table.c,
+	adt/table.h, adt/test_eventqueue.c, adt/test_set.c,
+	adt/timeseries.c, adt/timeseries.h, adt/typed_hashtable.h,
+	adt/typed_queue.h: copyright and disclaimer message
+
+2002-04-02 10:23  nspring
+
+	* ally.c: comments
+
+2002-04-02 10:23  nspring
+
+	* ttl_hashtable.c: correct cast for deletion callback
+
+2002-03-31 03:49  nspring
+
+	* adt/nscommon.h: deal with including perl includes - don't always
+	define false
+
+2002-03-29 18:56  nspring
+
+	* adt/: hashes.c, hashes.h: indirect string hash and isequal
+
+2002-03-29 18:56  nspring
+
+	* adt/typed_hashtable.h: key is certainly defined
+
+2002-03-29 11:51  nspring
+
+	* adt/typed_hashtable.h: better
+
+2002-03-27 00:10  nspring
+
+	* adt/: commando.h, nscommon.h, recursively.h, typed_hashtable.h:
+	general lclint appeasement
+
+2002-03-26 23:24  nspring
+
+	* adt/commando.h: allow cast on callbacks
+
+2002-03-26 23:23  nspring
+
+	* adt/commando.c: usage should exit
+
+2002-03-26 22:56  nspring
+
+	* adt/: .lclintrc, Makefile.am, commando.c, commando.h,
+	recursively.c: splint pass
+
+2002-03-26 15:55  nspring
+
+	* .cvsignore, adt/.cvsignore: ignorance
+
+2002-03-25 21:48  nspring
+
+	* adt/progress.c: handle excessively long labels more gracefully
+
+2002-03-25 21:47  nspring
+
+	* adt/: Makefile.am, bench-recursively.c, recursively.c,
+	recursively.h: a simple implementation of recursively visiting all
+	files in a subdirectory
+
+2002-03-25 16:26  nspring
+
+	* README: documentation?
+
+2002-03-23 01:25  nspring
+
+	* adt/progress.c: a little different formatting, not sure it's any
+	better
+
+2002-03-22 15:17  nspring
+
+	* adt/: Makefile.am, README: documentation?
+
+2002-03-22 14:15  nspring
+
+	* recheck_aliases.c: remove unused var
+
+2002-03-22 14:15  nspring
+
+	* alias_matrix.c: db code fixup
+
+2002-03-22 14:14  nspring
+
+	* dumpcch.c: update for new typed hashtable
+
+2002-03-22 14:14  nspring
+
+	* alias_matrix.h: whitespace cleanup
+
+2002-03-22 13:55  nspring
+
+	* Makefile.am, alias_matrix.c, configure.in, molly.c,
+	recheck_aliases.c, show_aliases.c: adjustments for postgresql-less
+	compile environments
+
+2002-03-22 00:29  nspring
+
+	* adt/commando.c: check for input errors
+
+2002-03-20 23:04  nspring
+
+	* adt/: Makefile.am, commando.c, commando.h: initial attempt at
+	command-line handling routines that don't suck.
+
+2002-03-15 23:02  nspring
+
+	* adt/: postgresql.c, postgresql.h: query and connect
+
+2002-03-15 20:06  nspring
+
+	* alias_matrix.c, alias_matrix.h, configure.in, dumpcch.c,
+	adt/Makefile.am, adt/postgresql.c, adt/postgresql.h: introduce
+	basic postgresql interface I like to adt/
+
+2002-03-15 15:39  nspring
+
+	* adt/nscommon.h: appears to parse all traceroutes, skipping
+	error-like lines
+
+2002-03-15 01:09  nspring
+
+	* adt/: eventqueue.c, test_eventqueue.c: compile without pthread
+
+2002-03-15 01:09  nspring
+
+	* adt/nscommon.h: make dmalloc's job easier
+
+2002-03-14 20:44  nspring
+
+	* adt/distribution.c: dmalloc
+
+2002-03-14 20:01  nspring
+
+	* adt/: distribution.c, hashtable.h, string_bindings.c,
+	typed_hashtable.h: deletion operators cleanup
+
+2002-03-14 18:42  nspring
+
+	* adt/: distribution.c, distribution.h: distribution of floats
+
+2002-03-14 15:45  nspring
+
+	* adt/typed_hashtable.h: bugfix
+
+2002-03-14 14:31  nspring
+
+	* adt/distribution.c: basic linearizing for median calculation
+
+2002-03-14 14:31  nspring
+
+	* adt/: hashtable.h, hashtable.c: 8 byte hash
+
+2002-03-14 14:30  nspring
+
+	* adt/typed_hashtable.h: make it easier to cast callbacks
+
+2002-03-12 12:50  ratul
+
+	* dumpcch.c: generic user mods
+
+2002-03-12 11:54  nspring
+
+	* dumpcch.c: 80 columns, dude.
+
+2002-03-12 11:38  ratul
+
+	* dumpcch.c: format comments
+
+2002-03-10 17:13  nspring
+
+	* adt/nscommon.h: more lclint effects
+
+2002-03-10 17:13  nspring
+
+	* adt/: distribution.c, distribution.h: basic functionality
+
+2002-03-10 17:13  nspring
+
+	* adt/: hashtable.c, hashtable.h, typed_hashtable.h:  a little
+	const sanity
+
+2002-03-06 12:10  nspring
+
+	* adt/: Makefile.am, distribution.c, distribution.h: basic
+	statistical analysis type, initial draft with some features
+
+2002-03-06 12:10  nspring
+
+	* adt/typed_hashtable.h: allow cast of function pointers by
+	defining a callback type
+
+2002-03-05 15:30  nspring
+
+	* FromCVS.sh, Makefile.am, alias_matrix.c, alias_matrix.h,
+	commandline.c, configure.in, dumpcch.c, molly.c, recheck_aliases.c:
+	plenty of changes that have been sitting around since the paper was
+	submitted
+
+2002-03-02 19:42  nspring
+
+	* adt/nscommon.h: initial revision
+
+2002-02-18 00:53  nspring
+
+	* adt/: nscommon.h, red_transitive.c, red_transitive.h: splint
+	annotations
+
+2002-01-29 21:36  nspring
+
+	* .cvsignore, dumpcch.c: first external
+
+2002-01-27 03:24  nspring
+
+	* ally.c, dumpcch.c, molly.c, recheck_aliases.c: liberal recheck
+
+2002-01-24 19:55  nspring
+
+	* ally.c: can't treat equal ipids as aliases
+
+2002-01-24 19:54  nspring
+
+	* alias_matrix.c, dumpcch.c: better sort routine
+
+2002-01-24 15:30  nspring
+
+	* Makefile.am, alias_matrix.c, alias_matrix.h, dumpcch.c:
+	router2pop tables
+
+2002-01-23 23:36  nspring
+
+	* show_authoritative.pl: initial commit of perl helper script
+
+2002-01-23 17:11  nspring
+
+	* dumpcch.c: propagate tops, but don't loop endlessly
+
+2002-01-23 16:40  nspring
+
+	* Makefile.am, dumpcch.c: dumpcch
+
+2002-01-23 16:40  nspring
+
+	* adt/: Makefile.am, link_matrix.c, link_matrix.h: matrix for link
+	connectivity
+
+2002-01-23 16:40  nspring
+
+	* alias_matrix.c: be nicer
+
+2002-01-16 19:07  nspring
+
+	* alias_matrix.c, alias_matrix.h, ally_main.c, commandline.c,
+	molly.c, recheck_aliases.c, show_aliases.c: extra files and access
+	to skitter tables
+
+2002-01-13 14:10  nspring
+
+	* alias_matrix.c: transaction for aliases table update
+
+2002-01-13 14:09  nspring
+
+	* ally.c: before macro ally.c
+
+2002-01-13 14:08  nspring
+
+	* commandline.c: abortive start at a limit option
+
+2002-01-13 14:08  nspring
+
+	* molly.c: drop priviledge before parsing command line
+
+2002-01-13 14:07  nspring
+
+	* adt/red_transitive.h: comment
+
+2002-01-01 18:14  nspring
+
+	* adt/: queue.c, queue.h: prioritized blocked queues
+
+2001-12-31 15:08  nspring
+
+	* alias_matrix.c, molly.c, recheck_aliases.c: oops
+
+2001-12-30 14:09  nspring
+
+	* molly.c: ttl d2 after sufficient non-matchings have entered the
+	db
+
+2001-12-29 00:29  nspring
+
+	* alias_matrix.c, alias_matrix.h, molly.c, recheck_aliases.c,
+	show_aliases.c: recheck and show only aliases that match ipid, let
+	the db filter
+
+2001-12-29 00:29  nspring
+
+	* ttl_hashtable.c: assert for lclint
+
+2001-12-28 22:20  nspring
+
+	* adt/progress.c: progress only when attached to a tty
+
+2001-12-28 21:15  nspring
+
+	* alias_matrix.c: better filter on dial
+
+2001-12-28 21:03  nspring
+
+	* alias_matrix.c: trust ipid
+
+2001-12-28 21:01  nspring
+
+	* alias_matrix.c: read the manpage for strstr again, neil
+
+2001-12-28 20:53  nspring
+
+	* molly.c: delta 1
+
+2001-12-28 20:44  nspring
+
+	* alias_matrix.c: skip 'dialup'
+
+2001-12-28 19:57  nspring
+
+	* adt/red_transitive.c: formatting
+
+2001-12-28 16:59  nspring
+
+	* alias_matrix.h: minor rearrange for libpg, sort of unnecessary
+
+2001-12-28 16:58  nspring
+
+	* adt/: red_transitive.c, red_transitive.h: couch the colors in a
+	char instead of an int; not perfectly compact, but factor of 4.
+
+2001-12-28 15:50  nspring
+
+	* Makefile.am: chmod recheck_aliases, and convert rule for png
+
+2001-12-28 15:50  nspring
+
+	* ally_main.c: hostname lookup
+
+2001-12-28 15:49  nspring
+
+	* ally.c: better ident handling
+
+2001-12-28 15:49  nspring
+
+	* alias_matrix.c: debugging
+
+2001-12-28 15:48  nspring
+
+	* commandline.c: help
+
+2001-12-28 15:48  nspring
+
+	* recheck_aliases.c: remember to init
+
+2001-12-28 15:48  nspring
+
+	* molly.c: de-verbosify
+
+2001-12-27 14:11  nspring
+
+	* alias_matrix.c: dumb bug
+
+2001-12-27 14:07  nspring
+
+	* show_aliases.c: check integrity  (debugging)
+
+2001-12-27 14:06  nspring
+
+	* adt/: red_transitive.c, red_transitive.h: check rtm integrity
+	(debugging work)
+
+2001-12-27 12:18  nspring
+
+	* recheck_aliases.c: comment
+
+2001-12-24 16:57  nspring
+
+	* nscommon.h: moved nscommon.h to adt
+
+2001-12-24 16:55  nspring
+
+	* adt/: Makefile.am, hashtable.c, nscommon.h, string_bindings.c:
+	nscommon into adt, min from linux
+
+2001-12-23 17:58  nspring
+
+	* alias_matrix.c, adt/progress.c, adt/progress.h: better progress
+	bar support
+
+2001-12-23 12:56  nspring
+
+	* Makefile.am, alias_matrix.c: slightly nicer dead handling,
+	allowing purple to show through.
+
+2001-12-23 12:15  nspring
+
+	* alias_matrix.c, alias_matrix.h, recheck_aliases.c: progress bar
+	on foreach_ally, better handling of dead nodes in xpm
+
+2001-12-23 11:18  nspring
+
+	* alias_matrix.c, alias_matrix.h, commandline.c, show_aliases.c:
+	initial attempt at xpm support
+
+2001-12-22 15:24  nspring
+
+	* alias_matrix.c: for writing
+
+2001-12-22 14:57  nspring
+
+	* alias_matrix.c, alias_matrix.h, commandline.c, show_aliases.c:
+	make_a_jgr
+
+2001-12-22 14:57  nspring
+
+	* adt/: red_transitive.c, red_transitive.h: accessor for dim
+
+2001-12-21 12:30  nspring
+
+	* alias_matrix.c: compressed indexing for otter
+
+2001-12-21 11:24  nspring
+
+	* alias_matrix.c, show_aliases.c: database bugfixes
+
+2001-12-20 19:22  nspring
+
+	* Makefile.am, alias_matrix.c, alias_matrix.h, commandline.c,
+	commandline.h, molly.c, recheck_aliases.c, show_aliases.c: recheck
+	implemented, dump aliases to database implemented
+
+2001-12-20 19:14  nspring
+
+	* alias_matrix.c: use routers, not tmp table
+
+2001-12-20 15:53  nspring
+
+	* alias_matrix.c, alias_matrix.h, commandline.c, molly.c,
+	recheck_aliases.c, show_aliases.c: target_asname added
+
+2001-12-20 15:37  nspring
+
+	* Makefile.am, molly.c: command line handling for molly
+
+2001-12-20 13:37  nspring
+
+	* .lclintrc, ally.c, molly.c: space and newline shuffling
+
+2001-12-20 12:34  nspring
+
+	* molly.c: debugging and reduced verbosity
+
+2001-12-20 12:34  nspring
+
+	* alias_matrix.c: crude progress
+
+2001-12-20 11:29  nspring
+
+	* Makefile.am, ally.c, ally.h, check_ttl_hash.c, molly.c,
+	ttl_hashtable.c, ttl_hashtable.h: ttl clustering, flexible
+	selection criteria
+
+2001-12-20 11:29  nspring
+
+	* adt/string_bindings.h: const
+
+2001-12-19 14:00  nspring
+
+	* commandline.c, commandline.h, recheck_aliases.c: initial commit
+
+2001-12-19 14:00  nspring
+
+	* MakeRoutersLst.sh: obsoletion
+
+2001-12-19 14:00  nspring
+
+	* adt/red_transitive.c: handle low memory situtations with an error
+	msg
+
+2001-12-19 13:59  nspring
+
+	* molly.c, show_aliases.c: pulled function to load_router_list
+
+2001-12-19 13:59  nspring
+
+	* ally.c: timeval based ordering and tighter bound for ipid check
+
+2001-12-19 13:58  nspring
+
+	* alias_matrix.c, alias_matrix.h: load router list and foreach ally
+
+2001-12-19 13:57  nspring
+
+	* Makefile.am: recheck aliases and initial command line
+
+2001-12-19 13:57  nspring
+
+	* .cvsignore: ignorance
+
+2001-12-17 22:10  nspring
+
+	* alias_matrix.c, alias_matrix.h, molly.c, show_aliases.c: tighter
+	db integration
+
+2001-12-17 20:03  nspring
+
+	* Makefile.am, alias_matrix.c, alias_matrix.h, molly.c,
+	show_aliases.c: moved guts into alias_matrix, new attempt at driver
+	code to read the database and apply the transitive closure
+
+2001-12-17 20:02  nspring
+
+	* adt/: red_transitive.h, string_bindings.h: include protectors
+
+2001-12-16 16:29  nspring
+
+	* molly.c: revised assertions to try to debug insertion failure
+
+2001-12-15 18:19  nspring
+
+	* molly.c: lclint %u cleanups, 5 reprieves from bad commands
+
+2001-12-15 12:59  nspring
+
+	* molly.c: move matching on peer with skipping
+
+2001-12-15 01:24  nspring
+
+	* ally.c: no warn
+
+2001-12-15 01:24  nspring
+
+	* ally.h, ally_main.c: separate driver code
+
+2001-12-15 01:23  nspring
+
+	* ally.c: quieter
+
+2001-12-15 01:22  nspring
+
+	* ally.c, molly.c: better, iterative
+
+2001-12-14 16:04  nspring
+
+	* AUTHORS, MakeRoutersLst.sh, Makefile.am, NEWS, ally.c, molly.c,
+	adt/hashtable.c, adt/hashtable.h, adt/red_transitive.c,
+	adt/red_transitive.h, adt/string_bindings.c, adt/string_bindings.h:
+	taking it for a spin
+
+2001-12-14 12:24  nspring
+
+	* minnie.pl: initial <ahem> driver code
+
+2001-12-14 12:23  nspring
+
+	* adt/.cvsignore, .cvsignore: ignorance
+
+2001-12-14 03:06  nspring
+
+	* ally.c: more global variable cleanup
+
+2001-12-14 02:44  nspring
+
+	* Makefile.am: lint both
+
+2001-12-14 02:44  nspring
+
+	* ally.c: global variable cleanups
+
+2001-12-14 02:44  nspring
+
+	* molly.c: lint cleanups
+
+2001-12-14 01:16  nspring
+
+	* molly.c: format
+
+2001-12-14 01:14  nspring
+
+	* adt/red_transitive.c: cleanup
+
+2001-12-14 01:05  nspring
+
+	* molly.c: database queries, moving on
+
+2001-12-14 01:04  nspring
+
+	* adt/red_transitive.c: debugging...
+
+2001-12-14 01:04  nspring
+
+	* adt/: string_bindings.c, string_bindings.h: counts
+
+2001-12-14 00:00  nspring
+
+	* FromCVS.sh: helper
+
+2001-12-13 23:57  nspring
+
+	* MakeRoutersLst.sh, Makefile.am, configure.in: link with postgres
+
+2001-12-13 23:57  nspring
+
+	* molly.c: hack at db query
+
+2001-12-13 18:18  nspring
+
+	* adt/: string_bindings.c, string_bindings.h: fixes in declarations
+	for qsort behavior
+
+2001-12-13 18:15  nspring
+
+	* Makefile.am, molly.c: accomodate indirect qsort
+
+2001-12-13 18:15  nspring
+
+	* adt/string_bindings.c: qsort works different
+
+2001-12-13 18:14  nspring
+
+	* ally.c: database friendly
+
+2001-12-13 18:04  nspring
+
+	* nscommon.h: need this too
+
+2001-12-13 18:01  nspring
+
+	* adt/string_bindings.c: compile fixes
+
+2001-12-13 17:58  nspring
+
+	* MakeRoutersLst.sh, Makefile, Makefile.am, acconfig.h,
+	configure.in, molly.c: draft work for intelligent alias resolution
+	on a large scale
+
+2001-12-13 17:58  nspring
+
+	* adt/: Makefile.am, red_transitive.c, red_transitive.h,
+	string_bindings.c, string_bindings.h: advanced string bindings and
+	red transitive matrix draft
+
+2001-12-13 02:22  nspring
+
+	* adt/: Makefile.am, disjoint_set.c, disjoint_set.h: initial hack
+	at a collection of disjoint sets implementation
+
+2001-12-13 02:21  nspring
+
+	* adt/set.c: comments
+
+2001-12-11 23:09  nspring
+
+	* Makefile, ally.c: serious updates to handle various icmp
+	responses, overal experiment results in a sane way (-1,0 or 1),
+	more
+
+2001-12-11 15:25  nspring
+
+	* ally.c: analyze
+
+2001-12-11 03:12  nspring
+
+	* README: accuracy in documentation
+
+2001-12-11 03:04  nspring
+
+	* Makefile, README, ally.c: initial hack
+
+2001-12-06 23:35  nspring
+
+	* adt/: queue.c, queue.h, string_bindings.c, typed_hashtable.h,
+	typed_queue.h: lclint annotations and some consts
+
+2001-12-06 19:44  nspring
+
+	* adt/queue.h: document
+
+2001-12-04 01:18  nspring
+
+	* adt/: check_string_bind.c, string_bindings.c, string_bindings.h:
+	AS-identifiers instead of unsigned shorts, kept in a table of
+	bindings
+
+2001-12-04 00:29  nspring
+
+	* adt/: Makefile.am, check_string_bind.c, string_bindings.c,
+	string_bindings.h: string bindings - for storing traceroute server
+	identifiers as 2-byte shorts
+
+2001-12-02 23:57  nspring
+
+	* adt/: typed_hashtable.h, typed_queue.h: added status module, lint
+	cleanups, quiet at the end
+
+2001-11-30 00:49  nspring
+
+	* adt/: buffer.c, table.c: typed prefix hash; redundant-decls
+	cleanliness
+
+2001-11-30 00:02  nspring
+
+	* adt/: test_eventqueue.c, test_set.c: unused attributes to reduce
+	warnings
+
+2001-11-27 03:25  nspring
+
+	* adt/typed_hashtable.h: formatting and ht_free_entry
+
+2001-11-26 16:36  nspring
+
+	* adt/: .cvsignore, Makefile.am, typed_queue.h: typed queue
+
+2001-11-26 16:02  nspring
+
+	* adt/: Makefile.am, check_typed_hash.c, typed_hashtable.h: typed
+	hash support
+
+2001-11-26 16:02  nspring
+
+	* adt/hashtable.h: break out iterator types
+
+2001-11-26 00:48  nspring
+
+	* adt/: Makefile.am, alert.c, alert.h, buffer.c, buffer.h,
+	check_si.c, eventqueue.c, eventqueue.c-broken, eventqueue.h,
+	graph_ts.c, graph_ts.h, graphing_ts.c, graphing_ts.h, hashes.c,
+	hashes.h, hashtable.c, hashtable.h, hprop.c, hprop.h,
+	hpropinterface.c, hpropinterface.h, join.c, join.h, progress.c,
+	progress.h, queue.c, queue.h, set.c, set.h, snprintf.c, sockaddr.c,
+	sorted_intlist.c, sorted_intlist.h, sorted_stringlist.c,
+	sorted_stringlist.h, sprinter.c, sprinter.h, table.c, table.h,
+	test_eventqueue.c, test_set.c, timeseries.c, timeseries.h: initial
+	import from neil's tree
+

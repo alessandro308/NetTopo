@@ -1,0 +1,21 @@
+while debugging, we found aliases that return the same ip
+identifier (this has been fixed):
+
+trying: 160.209.11.1 160.209.11.1/87
+      : 149.117.11.1 149.117.11.1/86
+1: from 149.117.11.1: id 1, ttl 52/246
+0: from 160.209.11.1: id 1, ttl 50/244
+3: from 149.117.11.1: id 1, ttl 52/246
+1: from 149.117.11.1: id 1, ttl 52/246
+0: from 160.209.11.1: id 1, ttl 50/244
+3: from 149.117.11.1: id 1, ttl 52/246
+insert into ally1239 (ip1, ip2, ipid, return_ttl, out_ttl, same_ip, b_returns_a, a_returns_b, cisco) values
++('160.209.11.1', '149.117.11.1', 1, -1, -1, -1, -1, -1, -1)
+
+
+should probably make sure the ipid's are distinct too.
+these were considered aliases. yes, packets seem to have
+been duplicated, it's not clear how or where.
+
+-neil
+

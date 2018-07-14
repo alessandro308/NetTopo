@@ -1,0 +1,131 @@
+To: ramesh@ICSI.Berkeley.EDU
+Cc: ratul@cs.washington.edu
+
+Ramesh,
+
+Here's a small sample of apparent alias pairs from verio:
+
+129.250.16.46 129.250.50.33
+129.250.116.121 129.250.29.20
+131.103.128.225 129.250.50.62
+129.250.27.162 129.250.27.194
+129.250.46.52 129.250.46.36
+199.238.112.34 204.203.0.150
+129.250.27.10 129.250.215.57
+129.250.122.154 129.250.122.93
+61.120.144.61 61.120.144.93
+129.250.3.237 129.250.2.98
+209.245.240.154 216.32.173.142
+199.217.254.70 199.217.254.74
+161.58.130.25 161.58.130.29
+130.94.197.1 129.250.16.234
+204.42.201.177 204.42.202.89
+157.238.230.117 129.250.31.57
+165.254.191.1 165.254.191.5
+204.247.122.142 206.86.241.61
+64.86.173.130 209.1.169.250
+
+There are 948 ip address pairs in our database that matched
+ipid and return ttl, but not any of the ip-address based
+heursitics.  Some of these pairs, but very few based on
+ad-hoc sampling, either do return the same ip address,
+or were "unlucky" collisions in the ipid space and not
+actually aliases.  We haven't yet run a second-pass
+confirmation analysis over the database.  We can get you
+the complete list after the second pass, if that's helpful.
+
+enjoy,
+-neil
+
+From: Ramesh Govindan <ramesh@ICSI.Berkeley.EDU>
+Subject: Re: IP addresses (fwd)
+To: Neil T Spring <nspring@cs.washington.edu>
+Cc: Ratul Mahajan <ratul@cs.washington.edu>
+X-Mailer: VM 6.96 under 21.1 (patch 14) "Cuyahoga Valley" XEmacs Lucid
+
+
+Neil T Spring writes:
+
+>> Thanks! So, in summary, the "alias resolution" technique
+>> doesn't work for most of these pairs, but the ipid trick
+>> does?
+
+> Exactly.  I didn't compare against the code you sent Ratul,
+> but I'm fairly certain I've cloned the traceroute-based
+> alias resolution technique correctly.
+
+Neil,
+
+For each of the pairs you gave me:
+ - ran my version of the IP ID test
+ - ran my version of the alias resolution test
+ - ran traceroutes
+
+Here are the results, best viewed in emacs outline-mode with
+font-locking turned on :-)
+
+http://www.aciri.org/ramesh/private/misc/aliastest.out
+Login: xxxxx Password: xxxxx
+
+There are some oddities (see my comments at the beginning of each
+pair), but the conclusion does seem to be that the IP ID test is more
+robust than the alias resolution test.
+
+I'm guessing Juniper implements responses to traceroutes differently
+(Verio, I'm told, uses Junipers). My previous tests had been
+on Ciscos and Bays.
+
+Thanks,
+Ramesh
+
+
+To: Ratul Mahajan <ratul@cs.washington.edu>
+Cc: Ramesh Govindan <ramesh@ICSI.Berkeley.EDU>,
+        David Wetherall <djw@cs.washington.edu>
+
+Well, as long as you're characterizing wacky router
+behavior, take a look at these (my personal favorites):
+
+ 61.120.146.46 61.213.160.78
+ 209.227.0.150 209.227.0.114
+ 157.238.28.214 157.238.28.210
+ 130.94.42.118 130.94.42.6
+
+Traceroutes are returned from the other IP address in
+the pair.  I've only found 10 such IP address pairs with 
+this behavior.  They match the ipid test.  I don't know  
+what the explanation is.
+
+
+From: Ramesh Govindan <ramesh@ICSI.Berkeley.EDU>
+Subject: Re: IP addresses (fwd)
+To: Neil T Spring <nspring@cs.washington.edu>
+Cc: Ratul Mahajan <ratul@cs.washington.edu>,
+   David Wetherall <djw@cs.washington.edu>
+X-Mailer: VM 6.96 under 21.1 (patch 14) "Cuyahoga Valley" XEmacs Lucid
+
+
+Neil T Spring writes:
+
+> Well, as long as you're characterizing wacky router
+> behavior, take a look at these (my personal favorites):
+
+>  61.120.146.46 61.213.160.78
+>  209.227.0.150 209.227.0.114
+>  157.238.28.214 157.238.28.210
+>  130.94.42.118 130.94.42.6
+
+Speaking of wacky behavior, here are some pairs
+which fail (at least my implementation of) the IP ID test,
+but whose traceroutes terminate at the same node:
+
+198.32.136.91 193.38.108.76
+167.152.2.49 167.152.2.14
+203.134.44.1 203.134.12.1
+
+Per-interface identifiers?
+
+Regards,
+Ramesh
+
+
