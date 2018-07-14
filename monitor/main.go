@@ -1,93 +1,52 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
-	"regexp"
 	"net"
 	"os"
+	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
-
-	"encoding/json"
-	"os/exec"
 )
 
 // TracerouteHop type
 type TracerouteHop struct {
-	Address     string	`json:"address"`
-	Host        string	`json:"host"`
-	Success     bool	`json:"success"`
-	TTL         int		`json:"ttl"`
+	Address string `json:"address"`
+	Host    string `json:"host"`
+	Success bool   `json:"success"`
+	TTL     int    `json:"ttl"`
 }
+
 // Final result type
 type TracerouteResult struct {
-	From    string          `json:"from"`
-	To      string			`json:"to"`
-	Type	string			`json:"type"`
-	Hops    []TracerouteHop	`json:"hops"`
+	From string          `json:"from"`
+	To   string          `json:"to"`
+	Type string          `json:"type"`
+	Hops []TracerouteHop `json:"hops"`
 }
 
 type Monitor struct {
-	IP		string	`json:"ip"`
-	Name	string	`json:"name"`
-	Type	string	`json:"type"`
+	IP   string `json:"ip"`
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
-func main() {
-	var to = flag.String("to", "127.0.0.1", "")
-	var server = flag.String("server", "1.1.1.254:5000", "")
-	var maxHops = flag.String("m", "10", "")
+type TraceRequest struct {
+	IP   string
+	Name string
+}
 
-	flag.Parse()
-	
-	fmt.Printf("Connection to NetTopo Server %s... ", *server)
-	conn, err := net.Dial("tcp", *server)
-	
-	if err != nil {
-		fmt.Println("Error:")
-		log.Fatal(err)
-	} else {
-		fmt.Println("Done!")
-	}
-
-	// Subscription phase
-	fmt.Printf("Subscribing current monitor... ")
-	var monitor Monitor
-	monitor.Name, _ = os.Hostname()
-	// Retrieve IP address associated to the `eth0` interface
-	netInterface, _ := net.InterfaceByName("eth0")
-	ips, _ :=	netInterface.Addrs()
-	ip := ips[0].String()
-	monitor.IP = ip[:len(ip)-3]
-	// Subscribe current monitor
-	monitor.Type = "notify"
-	subscription, _ := json.Marshal(monitor)
-	conn.Write(subscription)
-	fmt.Println("Done!")
-	
-	traceroute := exec.Command("traceroute", *to, "-m", *maxHops)
-	fmt.Printf("Traceroute to Monitor %s... ", *to)
-	output, err := traceroute.Output()
-
-	if err != nil {
-		fmt.Println("Error:")
-		log.Fatal(err)
-	} else {
-		fmt.Println("Done!")
-	}
-
-	var result TracerouteResult
-	result.From, _ = os.Hostname()
-	result.To = *to
-	result.Type = "trace"
-
+func parseTracerouteOutput(output string, result *TracerouteResult) {
 	traceID := regexp.MustCompile(`^\s(\d+)\s(.+)$`)
 	replyID := regexp.MustCompile(`(\S+)\s\((\S+)\)`)
 
-	// Remove the header of the trace list
-	traces := strings.Split(string(output), "\n")[1:]
+	// Remove the header of the trace list un attimo
+	traces := strings.Split(output, "\n")[1:]
 	currentTTL := 0
 
 	for _, trace := range traces {
@@ -112,11 +71,124 @@ func main() {
 			result.Hops[currentTTL-1].Success = true
 		}
 	}
-
-	packet, _ := json.Marshal(result)
-	fmt.Println(string(packet))
-
-	fmt.Printf("Sending traceroute result... ")
-	conn.Write(packet)
-	fmt.Println("Done!")
 }
+
+func tracerouteHandler(from string, monitors []TraceRequest, maxHops string, conn net.Conn) {
+	for _, monitor := range monitors {
+		go func() {
+			traceroute := exec.Command("traceroute", monitor.IP, "-m", maxHops)
+			fmt.Printf("Traceroute to Monitor %s... ", monitor.IP)
+			output, err := traceroute.Output()
+
+			if err != nil {
+				fmt.Println("Error:")
+				log.Fatal(err)
+			} else {
+				fmt.Println("Done!")
+			}
+
+			var result TracerouteResult
+			result.From = from
+			result.To = monitor.Name
+			result.Type = "trace"
+
+			parseTracerouteOutput(string(output), &result)
+
+			packet, _ := json.Marshal(result)
+			fmt.Println(string(packet))
+
+			fmt.Printf("Sending traceroute result... ")
+			conn.Write(packet)
+			fmt.Println("Done!")
+		}()
+	}
+}
+
+func main() {
+
+	var serverAddr = flag.String("server", "1.1.1.254:5000", "")
+	var maxHops = flag.String("m", "10", "")
+
+	flag.Parse()
+
+	fmt.Printf("Connection to NetTopo Server %s... ", *serverAddr)
+	server, err := net.Dial("tcp", *serverAddr)
+
+	if err != nil {
+		fmt.Println("Error:")
+		log.Fatal(err)
+	} else {
+		fmt.Println("Done!")
+	}
+
+	fmt.Println("Open port 5000...")
+	l, err := net.Listen("tcp", ":5000")
+	if err != nil {
+		fmt.Println("Error:")
+		log.Fatal(err)
+	} else {
+		fmt.Println("Done!")
+	}
+
+	// Subscription phase
+	fmt.Printf("Subscribing current monitor... ")
+	var monitor Monitor
+	monitor.Name, _ = os.Hostname()
+	// Retrieve IP address associated to the `eth0` interface
+	netInterface, _ := net.InterfaceByName("eth0")
+	ips, _ := netInterface.Addrs()
+	ip := ips[0].String()
+	monitor.IP = ip[:len(ip)-3]
+	// Subscribe current monitor
+	monitor.Type = "notify"
+	subscription, _ := json.Marshal(monitor)
+
+	server.Write(subscription)
+	fmt.Println("Done!")
+
+	defer l.Close()
+	fmt.Printf("Listening on 5000 for incoming requests...")
+
+	for {
+		conn, err := l.Accept()
+		fmt.Println("Connection accepted")
+		if err != nil {
+			fmt.Println("Error:")
+			log.Fatal(err)
+		}
+
+		go func() {
+			scanner := bufio.NewScanner(conn)
+			ok := scanner.Scan()
+
+			if !ok {
+				fmt.Println("Error network reading: ", scanner.Err())
+				return
+			}
+
+			var request map[string]interface{}
+			fmt.Println("Text:")
+			fmt.Println(scanner.Text())
+
+			//Here’s the actual decoding, and a check for associated errors.
+			if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
+				fmt.Println("Error on decoding request:", err)
+			}
+
+			switch request["type"].(string) {
+			case "trace":
+				traces := request["monitors"].([]interface{})
+				traceRequest := make([]TraceRequest, len(traces))
+				for i := range traces {
+					r := traces[i].(map[string]interface{})
+					traceRequest = append(traceRequest, TraceRequest{IP: r["ip"].(string), Name: r["name"].(string)})
+				}
+				tracerouteHandler(monitor.Name, traceRequest, *maxHops, server)
+			}
+
+		}()
+	}
+
+}
+
+//GIUSTO!

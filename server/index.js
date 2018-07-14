@@ -223,7 +223,6 @@ let merge = (graph, ei, ej) => {
     })
 
     let label = graph.edge(ei);
-    console.log("ei", ei);
     label.mergeOption = label.mergeOption.filter(e => !is_ei(e) );
     graph.setEdge(ei, label);
 }
@@ -261,7 +260,10 @@ function phase1() {
             let distance = networkData[originRouter].distance[destinationName];
             assert(distance != undefined, `Not defined distance between ${originRouter} and ${destinationName}`);
             let oppositePath = getPath(destinationName, originRouter);
-            assert(oppositePath != undefined, `Not found opposite path ${destinationName} => ${originRouter} ...`);
+            signale.error(`Not found opposite path ${destinationName} => ${originRouter} ...`);
+            if(oppositePath == undefined){
+                return; // break the algorithm since there is no opposite path
+            }
 
             oppositePath.alreadyUsed = true;
             let successNumberAB = hops.length; // Traceroute max hops
@@ -375,7 +377,6 @@ function phase2(){
                 let copiedGraph = graphlib.json.read(JSON.parse(serial));
                 merge(copiedGraph, edges[i], edges[j]);
                 let newDistance = graphlib.alg.floydWarshall(copiedGraph, () => 1, (node) => copiedGraph.nodeEdges(node)) // O(|V|^3)
-
                 for(let i = 0; i<tracerouteData.length; i++){
                     let trace = tracerouteData[i];
                     let from = getName(trace.from); // resolving alias === get node name associated to ip
@@ -399,7 +400,6 @@ function phase3() {
     
 	let existMergeOption = () => {
 		return g.edges().filter(e =>{
-            console.log("i", i, "label of", e, "is", g.edge(e));
             return g.edge(e).mergeOption && g.edge(e).mergeOption.length > 0
         }).length > 0;
 	}
@@ -435,9 +435,7 @@ function phase3() {
 
 function iTop() {
     phase1();
-    
     phase2();
-    //merge(g, { v: 'A1', w: 'R1' }, { v: 'A4', w: 'R1' });
     phase3();
 };
 iTop();
@@ -448,28 +446,67 @@ iTop();
 net = require('net');
 net.createServer(function (socket) {
     socket.on('data', function (data) {
-        let trace = JSON.parse(data);
-        if(data.type === "trace"){
-            tracerouteData.push(trace);
+        let msg = JSON.parse(data);
+        console.log("received\n", msg);
+        if(msg.type === "trace"){
+            tracerouteData.push(msg);
             // Resetting parameter in each trace
             tracerouteData.forEach(trace => trace.alreadyUsed = false)
             g = new Graph();
+            
             iTop();
         }
-        if(data.type === "notify"){
-            let name = data.name;
-            let ip = data.ip;
-            if(!(name in networkData)){
-                networkData[name] = {
-                    isMonitor: true,
-                    alias: [
-                        ip
-                    ]
-                }
-            }else{
-                if(!networkData[name].alias.includes(ip))
-                    networkData[name].alias.push(ip);
+        if(msg.type === "notify"){
+
+            let name = msg.name;
+            let ip = msg.ip;
+
+            // Sending all the monitor ip to permit to trace them
+            let ipAddresses = [];
+            console.log("Network Data", networkData)
+            for(key in networkData){
+                if(networkData[key].isMonitor){
+                    ipAddresses.push({ip: networkData[key].alias[0], name: key});
+                }   
             }
+            if(ipAddresses.length > 0){
+                console.log("PASSED IPADDRESS > 0")
+                let toSend = {
+                    type: "trace",
+                    monitors: ipAddresses
+                }
+                let monitor = new net.Socket();
+                monitor.connect(5000, ip, function() {
+                    console.log(`Reply to current monitor${ip}\n`+JSON.stringify(toSend)+"\n");
+                    monitor.write(JSON.stringify(toSend)+"\n");
+                    monitor.destroy();
+                });
+            }
+            // Notify all other routers
+            toSend = {
+                type: "trace",
+                monitors: [{ip: ip, name: name}]
+            }
+            
+            for(key in networkData){
+                if(networkData[key].isMonitor){ // All other routers
+                    let monitor1 = new net.Socket();
+                    monitor1.connect(5000, networkData[key].alias[0], function() {
+                        console.log(`Broadcasting all other routers, to ${networkData[key].alias[0]}\n`+JSON.stringify(toSend)+"\n");
+                        monitor1.write(JSON.stringify(toSend)+"\n");
+                        monitor1.destroy();
+                    });
+                }
+            }
+
+            // Add the monitor to the network
+            networkData[name] = {
+                isMonitor: true,
+                alias: [
+                    ip
+                ]
+            }
+                        
         }
     });
     socket.on('end', function () {
