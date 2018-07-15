@@ -54,7 +54,7 @@ type TracerouteResult struct {
 	Hops []TracerouteHop `json:"hops"`
 }
 
-func aliasResolutionHandler(ip1 string, ip2 string, conn net.Conn) {
+func AliasResolutionHandler(ip1 string, ip2 string, conn net.Conn) {
 	fmt.Println("Executing ally...")
 	ally := exec.Command("ally", ip1, ip2)
 	fmt.Printf("Resolution alias for %s %s... ", ip1, ip2)
@@ -82,9 +82,11 @@ func aliasResolutionHandler(ip1 string, ip2 string, conn net.Conn) {
 	fmt.Printf("Sending alias resolution result... ")
 	conn.Write(packet)
 	fmt.Println("Done!")
+
+	conn.Close()
 }
 
-func parseTracerouteOutput(output string, result *TracerouteResult) {
+func ParseTracerouteOutput(output string, result *TracerouteResult) {
 	traceID := regexp.MustCompile(`^\s(\d+)\s(.+)$`)
 	replyID := regexp.MustCompile(`(\S+)\s\((\S+)\)`)
 
@@ -116,7 +118,7 @@ func parseTracerouteOutput(output string, result *TracerouteResult) {
 	}
 }
 
-func tracerouteHandler(from string, monitors []TraceRequest, maxHops string, conn net.Conn) {
+func TracerouteHandler(from string, monitors []TraceRequest, maxHops string, conn net.Conn) {
 	for _, monitor := range monitors {
 		go func() {
 			traceroute := exec.Command("traceroute", monitor.IP, "-m", maxHops)
@@ -135,7 +137,7 @@ func tracerouteHandler(from string, monitors []TraceRequest, maxHops string, con
 			result.To = monitor.Name
 			result.Type = "trace"
 
-			parseTracerouteOutput(string(output), &result)
+			ParseTracerouteOutput(string(output), &result)
 
 			packet, _ := json.Marshal(result)
 			fmt.Println(string(packet))
@@ -145,6 +147,8 @@ func tracerouteHandler(from string, monitors []TraceRequest, maxHops string, con
 			fmt.Println("Done!")
 		}()
 	}
+
+	conn.Close()
 }
 
 func main() {
@@ -224,13 +228,14 @@ func main() {
 					r := traces[i].(map[string]interface{})
 					traceRequest = append(traceRequest, TraceRequest{IP: r["ip"].(string), Name: r["name"].(string)})
 				}
-				tracerouteHandler(monitor.Name, traceRequest, *maxHops, server)
+				TracerouteHandler(monitor.Name, traceRequest, *maxHops, server)
 			case "ally":
 				fmt.Println("Text Ally:")
 				fmt.Println(scanner.Text())
-				aliasResolutionHandler(request["ip1"].(string), request["ip2"].(string), server)
+				AliasResolutionHandler(request["ip1"].(string), request["ip2"].(string), server)
 			}
 		}()
 	}
-
 }
+
+// Scemo chi legge
