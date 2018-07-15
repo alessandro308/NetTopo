@@ -1,5 +1,6 @@
 FROM node
 
+RUN apt-get update && apt-get install -y vim nano
 WORKDIR /usr/src/app
 COPY package*.json ./
 COPY . .

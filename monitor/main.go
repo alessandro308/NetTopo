@@ -28,10 +28,10 @@ type AliasRequest struct {
 }
 
 type Monitor struct {
-	IpNetInt	string `json:"ipNeInt"`
+	IpNetInt    string `json:"ipNetInt"`
 	IpNetUnknow string `json:"ipNetUnknow"`
-	Name		string `json:"name"`
-	Type		string `json:"type"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
 }
 
 // TracerouteHop type
@@ -92,7 +92,7 @@ func AliasResolutionHandler(ip1 string, ip2 string, serverAddr string) {
 }
 
 func GetIpInterface(nameInt string) string {
-	netInterface, _ := net.InterfaceByName("eth0")
+	netInterface, _ := net.InterfaceByName(nameInt)
 	ips, _ := netInterface.Addrs()
 	ip := ips[0].String()
 	return ip[:len(ip)-3]
