@@ -14,12 +14,36 @@ import (
 	"strings"
 )
 
+type AliasResult struct {
+	IP1			string	`json:"ip1"`
+	IP2			string	`json:"ip2"`
+	Type		string	`json:"type"`
+	Success		bool	`json:"success"`
+}
+
+type AliasRequest struct {
+	IP1		string	`json:"ip1"`
+	IP2		string	`json:"ip2"`
+	Type	string	`json:"type"`
+}
+
+type Monitor struct {
+	IP   string `json:"ip"`
+	Name string `json:"name"`
+	Type string `json:"type"`
+}
+
 // TracerouteHop type
 type TracerouteHop struct {
 	Address string `json:"address"`
 	Host    string `json:"host"`
 	Success bool   `json:"success"`
 	TTL     int    `json:"ttl"`
+}
+
+type TraceRequest struct {
+	IP   string
+	Name string
 }
 
 // Final result type
@@ -30,15 +54,33 @@ type TracerouteResult struct {
 	Hops []TracerouteHop `json:"hops"`
 }
 
-type Monitor struct {
-	IP   string `json:"ip"`
-	Name string `json:"name"`
-	Type string `json:"type"`
-}
+func aliasResolutionHandler(ip1 string, ip2 string, conn net.Conn) {
+	ally := exec.Command("ally", ip1, ip2)
+	fmt.Printf("Resolution alias for %s %s... ", ip1, ip2)
+	output, err := ally.Output()
 
-type TraceRequest struct {
-	IP   string
-	Name string
+	if err != nil {
+		fmt.Println("Error:")
+		log.Fatal(err)
+	} else {
+		fmt.Println("Done!")
+	}
+
+	var result AliasResult
+	result.IP1 = ip1
+	result.IP2 = ip2
+	result.Type = "ally_reply"
+
+	sameIpID := regexp.MustCompile(`(!?)same_ip`)
+	// Find `same_ip` result but it can be a negative response
+	resul.Success = sameIpID.MatchString(output) && sameIpID.FindStringSubmatch(output) == nil
+
+	packet, _ := json.Marshal(result)
+	fmt.Println(string(packet))
+
+	fmt.Printf("Sending alias resolution result... ")
+	conn.Write(packet)
+	fmt.Println("Done!")
 }
 
 func parseTracerouteOutput(output string, result *TracerouteResult) {
@@ -105,7 +147,6 @@ func tracerouteHandler(from string, monitors []TraceRequest, maxHops string, con
 }
 
 func main() {
-
 	var serverAddr = flag.String("server", "1.1.1.254:5000", "")
 	var maxHops = flag.String("m", "10", "")
 
@@ -121,7 +162,7 @@ func main() {
 		fmt.Println("Done!")
 	}
 
-	fmt.Println("Open port 5000...")
+	fmt.Printf("Opening port 5000... ")
 	l, err := net.Listen("tcp", ":5000")
 	if err != nil {
 		fmt.Println("Error:")
@@ -147,13 +188,12 @@ func main() {
 	fmt.Println("Done!")
 
 	defer l.Close()
-	fmt.Printf("Listening on 5000 for incoming requests...")
+	fmt.Println("Listening on 5000 for incoming requests...")
 
 	for {
 		conn, err := l.Accept()
-		fmt.Println("Connection accepted")
 		if err != nil {
-			fmt.Println("Error:")
+			fmt.Println("Error during connection accepting:")
 			log.Fatal(err)
 		}
 
@@ -185,12 +225,9 @@ func main() {
 				}
 				tracerouteHandler(monitor.Name, traceRequest, *maxHops, server)
 			case "ally":
-
+				aliasResolutionHandler(request["ip1"].(string), request["ip2"].(string), server)
 			}
-
 		}()
 	}
 
 }
-
-//GIUSTO!
