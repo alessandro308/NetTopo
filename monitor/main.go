@@ -184,6 +184,8 @@ func main() {
 					traceRequest = append(traceRequest, TraceRequest{IP: r["ip"].(string), Name: r["name"].(string)})
 				}
 				tracerouteHandler(monitor.Name, traceRequest, *maxHops, server)
+			case "ally":
+
 			}
 
 		}()

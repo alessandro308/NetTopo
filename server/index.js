@@ -3,6 +3,8 @@ const Graph = graphlib.Graph
 var fs = require('fs');
 const signale = require('signale');
 
+const NETWORK_DIAMETER = 10;
+
 const networkData = JSON.parse(fs.readFileSync('./netdata.json', 'utf8'));
 const tracerouteData = JSON.parse(fs.readFileSync('./traceroute.json', 'utf8'));
 
@@ -257,7 +259,7 @@ function phase1() {
             if(trace.alreadyUsed){ // Avoid to consider a path already used as opposite path
                 return;
             }
-            let distance = networkData[originRouter].distance[destinationName];
+            let distance = networkData[originRouter].distance[destinationName] || NETWORK_DIAMETER;
             assert(distance != undefined, `Not defined distance between ${originRouter} and ${destinationName}`);
             let oppositePath = getPath(destinationName, originRouter);
             signale.error(`Not found opposite path ${destinationName} => ${originRouter} ...`);
@@ -415,11 +417,16 @@ function phase3() {
     let i = 0; // used only for debug prints
     while (existMergeOption()) { //Pseudocode from the paper
         i++;
+        console.log(g);
         let ei = findEdgeWithLessMergeOptions(g.edges())
+        console.log("ei", ei);
         let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
+        console.log("ei-merge", g.edge(ei).mergeOption)
+        console.log("ej", ej);
+
         
-        assert(ei != undefined, "EI è undefined");
-        assert(ej != undefined, "EJ è undefined");
+        assert(ei != undefined, "EI is undefined");
+        assert(ej != undefined, "EJ is undefined");
 		if (compatible(ei, ej)) {
             merge(g, ei, ej);
             
@@ -441,6 +448,46 @@ function iTop() {
 iTop();
 
 
+function getTrace(from, to){
+    for(let i = 0; i<tracerouteData.length; i++){
+        let t = tracerouteData[i];
+        if(t.from === to && t.to === from ){
+            return t;
+        }
+    }
+    return null;
+}
+
+function sendResolveAliasRequests(from, to){
+    let t1 = getTrace(from, to);
+    let t2 = getTrace(to, from);
+    let a = networkData[t1.from].alias[0];
+    let b = networkData[t1.to].alias[0];
+    let ab = t1.hops;
+    let ba = t2.hops.reverse();
+    // Assertion: same hops length
+    for(let i = 0; i<ab.length; i++){
+        let toSend = {
+            type: "ally",
+            ip1: ab[i].address,
+            ip2: ba[i].address
+        }
+        let monitorA = new net.Socket();
+        monitorA.connect(5000, a, function() {
+            console.log(`Sending ally to ${a}\n`+JSON.stringify(toSend)+"\n");
+            monitorA.write(JSON.stringify(toSend)+"\n");
+            monitorA.destroy();
+        });
+
+        let monitorB = new net.Socket();
+        monitorB.connect(5000, b, function() {
+            console.log(`Sending ally to ${a}\n`+JSON.stringify(toSend)+"\n");
+            monitorB.write(JSON.stringify(toSend)+"\n");
+            monitorB.destroy();
+        });
+    }
+    
+}
 
 // TCP Server to receive Traceroute
 net = require('net');
@@ -450,11 +497,11 @@ net.createServer(function (socket) {
         console.log("received\n", msg);
         if(msg.type === "trace"){
             tracerouteData.push(msg);
-            // Resetting parameter in each trace
-            tracerouteData.forEach(trace => trace.alreadyUsed = false)
-            g = new Graph();
             
-            iTop();
+            tracerouteData.forEach(trace => trace.alreadyUsed = false)
+            if(getTrace(msg.to, msg.from) != null){
+                sendResolveAliasRequests(msg.from, msg.to);
+            }
         }
         if(msg.type === "notify"){
 
@@ -508,6 +555,28 @@ net.createServer(function (socket) {
             }
                         
         }
+        if(msg.type === "ally_reply"){
+            if(msg.isSame === true){
+                let routerName;
+                for(router in networkData){
+                    if(networkData[router].alias.includes(msg.ip1) || networkData[router].alias.includes(msg.ip2)){
+                        routerName = router;
+                        break;
+                    }
+                }
+                if(routerName == undefined){
+                    networkData[anonRouter.getNewAnonRouter()] = {isMonitor: false, distance: {}}; // setting empty distance
+                    networkData[anonRouter.getLastAnonRouter()].alias = [msg.ip1, msg.ip2];
+                }else{
+                    if(!networkData[routerName].alias.includes(msg.ip1)){
+                        networkData[routerName].alias.push(msg.ip1)
+                    }
+                    if(!networkData[routerName].alias.includes(msg.ip2)){
+                        networkData[routerName].alias.push(msg.ip)
+                    }
+                }
+            }
+        }
     });
     socket.on('end', function () {
         process.stdout.write("communication close");
@@ -525,6 +594,8 @@ app.set('view engine', 'pug')
 app.use(express.static('views/assets'));
 app.use('/assets', express.static('views/assets'));
 app.get('/', (req, res) => {
+    g = new Graph();
+    iTop();
     let nodes = g.nodes();
     let edges = g.edges()
     let nodes_res = [];
