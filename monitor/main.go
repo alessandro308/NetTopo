@@ -73,7 +73,7 @@ func aliasResolutionHandler(ip1 string, ip2 string, conn net.Conn) {
 
 	sameIpID := regexp.MustCompile(`(!?)same_ip`)
 	// Find `same_ip` result but it can be a negative response
-	resul.Success = sameIpID.MatchString(output) && sameIpID.FindStringSubmatch(output) == nil
+	result.Success = sameIpID.MatchString(output) && sameIpID.FindStringSubmatch(output) == nil
 
 	packet, _ := json.Marshal(result)
 	fmt.Println(string(packet))
