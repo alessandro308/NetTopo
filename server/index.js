@@ -451,7 +451,7 @@ iTop();
 function getTrace(from, to){
     for(let i = 0; i<tracerouteData.length; i++){
         let t = tracerouteData[i];
-        if(t.from === to && t.to === from ){
+        if(t.from === from && t.to === to ){
             return t;
         }
     }
@@ -461,6 +461,7 @@ function getTrace(from, to){
 function sendResolveAliasRequests(from, to){
     let t1 = getTrace(from, to);
     let t2 = getTrace(to, from);
+    console.log("Resolving Alias\n","\tnetworkData\n", networkData);
     let a = networkData[t1.from].alias[0];
     let b = networkData[t1.to].alias[0];
     let ab = t1.hops;
@@ -494,12 +495,14 @@ net = require('net');
 net.createServer(function (socket) {
     socket.on('data', function (data) {
         let msg = JSON.parse(data);
-        console.log("received\n", msg);
+        console.log("RECEIVED\n\n", msg, "\n\n\n\n");
         if(msg.type === "trace"){
             tracerouteData.push(msg);
             
             tracerouteData.forEach(trace => trace.alreadyUsed = false)
-            if(getTrace(msg.to, msg.from) != null){
+            let opptrace = getTrace(msg.to, msg.from);
+            if(opptrace != null){
+                console.log("exists opposite trace", opptrace);
                 sendResolveAliasRequests(msg.from, msg.to);
             }
         }
@@ -510,14 +513,13 @@ net.createServer(function (socket) {
 
             // Sending all the monitor ip to permit to trace them
             let ipAddresses = [];
-            console.log("Network Data", networkData)
             for(key in networkData){
                 if(networkData[key].isMonitor){
                     ipAddresses.push({ip: networkData[key].alias[0], name: key});
                 }   
             }
             if(ipAddresses.length > 0){
-                console.log("PASSED IPADDRESS > 0")
+                console.log("Exists some other router")
                 let toSend = {
                     type: "trace",
                     monitors: ipAddresses

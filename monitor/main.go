@@ -15,16 +15,16 @@ import (
 )
 
 type AliasResult struct {
-	IP1			string	`json:"ip1"`
-	IP2			string	`json:"ip2"`
-	Type		string	`json:"type"`
-	Success		bool	`json:"success"`
+	IP1     string `json:"ip1"`
+	IP2     string `json:"ip2"`
+	Type    string `json:"type"`
+	Success bool   `json:"success"`
 }
 
 type AliasRequest struct {
-	IP1		string	`json:"ip1"`
-	IP2		string	`json:"ip2"`
-	Type	string	`json:"type"`
+	IP1  string `json:"ip1"`
+	IP2  string `json:"ip2"`
+	Type string `json:"type"`
 }
 
 type Monitor struct {
@@ -55,6 +55,7 @@ type TracerouteResult struct {
 }
 
 func aliasResolutionHandler(ip1 string, ip2 string, conn net.Conn) {
+	fmt.Println("Executing ally...")
 	ally := exec.Command("ally", ip1, ip2)
 	fmt.Printf("Resolution alias for %s %s... ", ip1, ip2)
 	output, err := ally.Output()
@@ -73,7 +74,7 @@ func aliasResolutionHandler(ip1 string, ip2 string, conn net.Conn) {
 
 	sameIpID := regexp.MustCompile(`(!?)same_ip`)
 	// Find `same_ip` result but it can be a negative response
-	result.Success = sameIpID.MatchString(output) && sameIpID.FindStringSubmatch(output) == nil
+	result.Success = sameIpID.MatchString(string(output)) && sameIpID.FindStringSubmatch(string(output)) == nil
 
 	packet, _ := json.Marshal(result)
 	fmt.Println(string(packet))
@@ -207,8 +208,6 @@ func main() {
 			}
 
 			var request map[string]interface{}
-			fmt.Println("Text:")
-			fmt.Println(scanner.Text())
 
 			//Here’s the actual decoding, and a check for associated errors.
 			if err := json.Unmarshal(scanner.Bytes(), &request); err != nil {
@@ -217,6 +216,8 @@ func main() {
 
 			switch request["type"].(string) {
 			case "trace":
+				fmt.Println("Received Trace:")
+				fmt.Println(scanner.Text())
 				traces := request["monitors"].([]interface{})
 				traceRequest := make([]TraceRequest, len(traces))
 				for i := range traces {
@@ -225,6 +226,8 @@ func main() {
 				}
 				tracerouteHandler(monitor.Name, traceRequest, *maxHops, server)
 			case "ally":
+				fmt.Println("Text Ally:")
+				fmt.Println(scanner.Text())
 				aliasResolutionHandler(request["ip1"].(string), request["ip2"].(string), server)
 			}
 		}()
