@@ -28,9 +28,10 @@ type AliasRequest struct {
 }
 
 type Monitor struct {
-	IP   string `json:"ip"`
-	Name string `json:"name"`
-	Type string `json:"type"`
+	IpNetInt	string `json:"ipNeInt"`
+	IpNetUnknow string `json:"ipNetUnknow"`
+	Name		string `json:"name"`
+	Type		string `json:"type"`
 }
 
 // TracerouteHop type
@@ -88,6 +89,13 @@ func AliasResolutionHandler(ip1 string, ip2 string, serverAddr string) {
 	server.Write(packet)
 	server.Close()
 	fmt.Println("Done!")
+}
+
+func GetIpInterface(nameInt string) string {
+	netInterface, _ := net.InterfaceByName("eth0")
+	ips, _ := netInterface.Addrs()
+	ip := ips[0].String()
+	return ip[:len(ip)-3]
 }
 
 func ParseTracerouteOutput(output string, result *TracerouteResult) {
@@ -185,15 +193,13 @@ func main() {
 	}
 	var monitor Monitor
 	monitor.Name, _ = os.Hostname()
-	// Retrieve IP address associated to the `eth0` interface
-	netInterface, _ := net.InterfaceByName("eth0")
-	ips, _ := netInterface.Addrs()
-	ip := ips[0].String()
-	monitor.IP = ip[:len(ip)-3]
+	// Retrieve IP address associated to the interface attached to the unknow netwrok
+	monitor.IpNetUnknow = GetIpInterface("eth0")
+	// Retrieve IP address associated to the interface attached to the NetTopo network
+	monitor.IpNetInt = GetIpInterface("eth1")
 	// Subscribe current monitor
 	monitor.Type = "notify"
 	subscription, _ := json.Marshal(monitor)
-
 	server.Write(subscription)
 	server.Close()
 	fmt.Println("Done!")
