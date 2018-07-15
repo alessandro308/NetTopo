@@ -54,7 +54,7 @@ type TracerouteResult struct {
 	Hops []TracerouteHop `json:"hops"`
 }
 
-func AliasResolutionHandler(ip1 string, ip2 string, conn net.Conn) {
+func AliasResolutionHandler(ip1 string, ip2 string, serverAddr string) {
 	fmt.Println("Executing ally...")
 	ally := exec.Command("ally", ip1, ip2)
 	fmt.Printf("Resolution alias for %s %s... ", ip1, ip2)
@@ -80,10 +80,14 @@ func AliasResolutionHandler(ip1 string, ip2 string, conn net.Conn) {
 	fmt.Println(string(packet))
 
 	fmt.Printf("Sending alias resolution result... ")
-	conn.Write(packet)
+	server, err := net.Dial("tcp", serverAddr)
+	if err != nil {
+		fmt.Println("Error:")
+		log.Fatal(err)
+	}
+	server.Write(packet)
+	server.Close()
 	fmt.Println("Done!")
-
-	conn.Close()
 }
 
 func ParseTracerouteOutput(output string, result *TracerouteResult) {
@@ -118,7 +122,7 @@ func ParseTracerouteOutput(output string, result *TracerouteResult) {
 	}
 }
 
-func TracerouteHandler(from string, monitors []TraceRequest, maxHops string, conn net.Conn) {
+func TracerouteHandler(from string, monitors []TraceRequest, maxHops string, serverAddr string) {
 	for _, monitor := range monitors {
 		go func() {
 			traceroute := exec.Command("traceroute", monitor.IP, "-m", maxHops)
@@ -143,12 +147,16 @@ func TracerouteHandler(from string, monitors []TraceRequest, maxHops string, con
 			fmt.Println(string(packet))
 
 			fmt.Printf("Sending traceroute result... ")
-			conn.Write(packet)
+			server, err := net.Dial("tcp", serverAddr)
+			if err != nil {
+				fmt.Println("Error:")
+				log.Fatal(err)
+			}
+			server.Write(packet)
 			fmt.Println("Done!")
+			server.Close()
 		}()
 	}
-
-	conn.Close()
 }
 
 func main() {
@@ -156,17 +164,6 @@ func main() {
 	var maxHops = flag.String("m", "10", "")
 
 	flag.Parse()
-
-	fmt.Printf("Connection to NetTopo Server %s... ", *serverAddr)
-	server, err := net.Dial("tcp", *serverAddr)
-
-	if err != nil {
-		fmt.Println("Error:")
-		log.Fatal(err)
-	} else {
-		fmt.Println("Done!")
-	}
-
 	fmt.Printf("Opening port 5000... ")
 	l, err := net.Listen("tcp", ":5000")
 	if err != nil {
@@ -177,7 +174,15 @@ func main() {
 	}
 
 	// Subscription phase
-	fmt.Printf("Subscribing current monitor... ")
+	fmt.Println("Subscribing current monitor to server...")
+	server, err := net.Dial("tcp", *serverAddr)
+
+	if err != nil {
+		fmt.Println("Error:")
+		log.Fatal(err)
+	} else {
+		fmt.Println("Done!")
+	}
 	var monitor Monitor
 	monitor.Name, _ = os.Hostname()
 	// Retrieve IP address associated to the `eth0` interface
@@ -190,6 +195,7 @@ func main() {
 	subscription, _ := json.Marshal(monitor)
 
 	server.Write(subscription)
+	server.Close()
 	fmt.Println("Done!")
 
 	defer l.Close()
@@ -203,9 +209,9 @@ func main() {
 		}
 
 		go func() {
+
 			scanner := bufio.NewScanner(conn)
 			ok := scanner.Scan()
-
 			if !ok {
 				fmt.Println("Error network reading: ", scanner.Err())
 				return
@@ -228,12 +234,13 @@ func main() {
 					r := traces[i].(map[string]interface{})
 					traceRequest = append(traceRequest, TraceRequest{IP: r["ip"].(string), Name: r["name"].(string)})
 				}
-				TracerouteHandler(monitor.Name, traceRequest, *maxHops, server)
+				TracerouteHandler(monitor.Name, traceRequest, *maxHops, *serverAddr)
 			case "ally":
 				fmt.Println("Text Ally:")
 				fmt.Println(scanner.Text())
-				AliasResolutionHandler(request["ip1"].(string), request["ip2"].(string), server)
+				AliasResolutionHandler(request["ip1"].(string), request["ip2"].(string), *serverAddr)
 			}
+
 		}()
 	}
 }

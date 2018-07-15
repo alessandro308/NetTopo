@@ -390,7 +390,7 @@ function phase2(){
                 }
 
             }
-            if(valid){
+            if(valid && !edgeAttachment.mergeOption.includes(edges[j])){
                 edgeAttachment.mergeOption.push(edges[j]);
                 g.setEdge(edges[i], edgeAttachment); // There is a control before that check that on edge E1 is not added E1 itself
             }
@@ -417,7 +417,6 @@ function phase3() {
     let i = 0; // used only for debug prints
     while (existMergeOption()) { //Pseudocode from the paper
         i++;
-        console.log(g);
         let ei = findEdgeWithLessMergeOptions(g.edges())
         console.log("ei", ei);
         let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
@@ -462,30 +461,32 @@ function sendResolveAliasRequests(from, to){
     let t1 = getTrace(from, to);
     let t2 = getTrace(to, from);
     console.log("Resolving Alias\n","\tnetworkData\n", networkData);
-    let a = networkData[t1.from].alias[0];
-    let b = networkData[t1.to].alias[0];
+    let a = networkData[t1.from].ipNetInt;
+    let b = networkData[t1.to].ipNetInt;
     let ab = t1.hops;
     let ba = t2.hops.reverse();
     // Assertion: same hops length
     for(let i = 0; i<ab.length; i++){
-        let toSend = {
-            type: "ally",
-            ip1: ab[i].address,
-            ip2: ba[i].address
-        }
-        let monitorA = new net.Socket();
-        monitorA.connect(5000, a, function() {
-            console.log(`Sending ally to ${a}\n`+JSON.stringify(toSend)+"\n");
-            monitorA.write(JSON.stringify(toSend)+"\n");
-            monitorA.destroy();
-        });
+        if( ab[i].success && ba[i].success){
+            let toSend = {
+                type: "ally",
+                ip1: ab[i].address,
+                ip2: ba[i].address
+            }
+            let monitorA = new net.Socket();
+            monitorA.connect(5000, a, function() {
+                console.log(`Sending ally to ${a}\n`+JSON.stringify(toSend)+"\n");
+                monitorA.write(JSON.stringify(toSend)+"\n");
+                monitorA.destroy();
+            });
 
-        let monitorB = new net.Socket();
-        monitorB.connect(5000, b, function() {
-            console.log(`Sending ally to ${a}\n`+JSON.stringify(toSend)+"\n");
-            monitorB.write(JSON.stringify(toSend)+"\n");
-            monitorB.destroy();
-        });
+            let monitorB = new net.Socket();
+            monitorB.connect(5000, b, function() {
+                console.log(`Sending ally to ${b}\n`+JSON.stringify(toSend)+"\n");
+                monitorB.write(JSON.stringify(toSend)+"\n");
+                monitorB.destroy();
+            });
+        } 
     }
     
 }
@@ -509,13 +510,13 @@ net.createServer(function (socket) {
         if(msg.type === "notify"){
 
             let name = msg.name;
-            let ip = msg.ip;
+            let ip = msg.ipNetUnknown;
 
             // Sending all the monitor ip to permit to trace them
             let ipAddresses = [];
             for(key in networkData){
                 if(networkData[key].isMonitor){
-                    ipAddresses.push({ip: networkData[key].alias[0], name: key});
+                    ipAddresses.push({ip: networkData[key].alias[0], name: key, ipNetInt: msg.ipNetInt});
                 }   
             }
             if(ipAddresses.length > 0){
@@ -525,7 +526,7 @@ net.createServer(function (socket) {
                     monitors: ipAddresses
                 }
                 let monitor = new net.Socket();
-                monitor.connect(5000, ip, function() {
+                monitor.connect(5000, msg.ipNetInt, function() {
                     console.log(`Reply to current monitor${ip}\n`+JSON.stringify(toSend)+"\n");
                     monitor.write(JSON.stringify(toSend)+"\n");
                     monitor.destroy();
@@ -540,8 +541,8 @@ net.createServer(function (socket) {
             for(key in networkData){
                 if(networkData[key].isMonitor){ // All other routers
                     let monitor1 = new net.Socket();
-                    monitor1.connect(5000, networkData[key].alias[0], function() {
-                        console.log(`Broadcasting all other routers, to ${networkData[key].alias[0]}\n`+JSON.stringify(toSend)+"\n");
+                    monitor1.connect(5000, networkData[key].ipNetInt, function() {
+                        console.log(`Broadcasting all other routers, to ${networkData[key].ipNetInt}\n`+JSON.stringify(toSend)+"\n");
                         monitor1.write(JSON.stringify(toSend)+"\n");
                         monitor1.destroy();
                     });
@@ -596,8 +597,9 @@ app.set('view engine', 'pug')
 app.use(express.static('views/assets'));
 app.use('/assets', express.static('views/assets'));
 app.get('/', (req, res) => {
-    g = new Graph();
+    g = new Graph({directed: false});
     iTop();
+    console.log(g);
     let nodes = g.nodes();
     let edges = g.edges()
     let nodes_res = [];
