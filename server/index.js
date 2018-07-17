@@ -140,7 +140,8 @@ let merge = (graph, ei, ej) => {
     /*
         label = {path: [], mergeOption: []}
     */
-
+    let ejLabel = graph.edge(ej);
+    let eilabel = graph.edge(ei);
   				/*All incident edges ej.v - mapping in order to have the start as other node, not own*/
     let inEdges = graph.nodeEdges(ej.v).map(e => e.w === ej.v ? e : {v: e.w, w: e.v}); 
     let outEdges = graph.nodeEdges(ej.w).map(e => e.v === ej.w ? e : {v: e.w, w: e.v});
@@ -152,6 +153,9 @@ let merge = (graph, ei, ej) => {
     let is_ei = (edge) => {
         return (edge.v == ei.v && edge.w == ei.w) || (edge.w == ei.v && edge.v == ei.w)
     }
+    let is_ej = (edge) => {
+        return (edge.v == ej.v && edge.w == ej.w) || (edge.w == ej.v && edge.v == ej.w)
+    }
 
     for (let i = 0; i<inEdges.length; i++) {
         let label = graph.edge(inEdges[i]);
@@ -162,7 +166,13 @@ let merge = (graph, ei, ej) => {
                 let existingLabel = graph.edge(inEdges[i].v, ei.v);
                 resultLabel = {
                     path: [...label.path, ...existingLabel.path],
-                    mergeOption: [...label.mergeOption, ...existingLabel.mergeOption]
+                    mergeOption: ([...label.mergeOption, ...existingLabel.mergeOption]).filter(
+                        (edge, index, self) =>
+                            index === self.findIndex((t) => (
+                            t.v === edge.v && t.w === edge.w
+                            )
+                        )
+                    )
                 }
             }
             graph.setEdge(inEdges[i].v, ei.v, resultLabel); 
@@ -179,7 +189,13 @@ let merge = (graph, ei, ej) => {
                 let existingLabel_out = graph.edge(ei.w, outEdges[i].w);
                 resultLabel = {
                     path: [...label.path, ...existingLabel_out.path],
-                    mergeOption: [...label.mergeOption, ...existingLabel_out.mergeOption]
+                    mergeOption: ([...label.mergeOption, ...existingLabel_out.mergeOption]).filter(
+                        (edge, index, self) =>
+                            index === self.findIndex((t) => (
+                            t.v === edge.v && t.w === edge.w
+                            )
+                        )
+                    )
                 }
             }
 
@@ -194,6 +210,7 @@ let merge = (graph, ei, ej) => {
         graph.node(ej.w).type
     )
     assert(mergeType != null, "MERGING TWO EDGE NOT VALID");
+
     // Reassign the nodes type
      let startLabel = graph.node(ei.v)
      startLabel.type = mergeType[0]
@@ -215,18 +232,26 @@ let merge = (graph, ei, ej) => {
     let edges = graph.edges();
     edges.forEach(edge => {
         let label = graph.edge(edge);
-        label.mergeOption = label.mergeOption.map( opt => {
+        label.mergeOption = (label.mergeOption.map( opt => { //Replace ej with ei
             let result = {};
             result.v = (opt.v == ej.v || opt.v == ej.w) ? ei.v : opt.v;
             result.w = (opt.w == ej.v || opt.w == ej.w) ? ei.w : opt.w;
             return result;
-        });
+        })).filter(
+            (edge, index, self) =>
+                index === self.findIndex((t) => (
+                t.v === edge.v && t.w === edge.w
+                )
+            )
+        ).filter((labeledge, index) => {
+            return edge.v != labeledge.v && edge.w != labeledge.w // Remove from the label, the edge itself
+        })
         graph.setEdge(edge, label);
-    })
+    });
 
-    let label = graph.edge(ei);
-    label.mergeOption = label.mergeOption.filter(e => !is_ei(e) );
-    graph.setEdge(ei, label);
+    eilabel.mergeOption = ([...eilabel.mergeOption, ...(ejLabel ? ejLabel.mergeOption : [])].filter(e => !is_ei(e) && !is_ej(e)))
+
+    graph.setEdge(ei, eilabel);
 }
 
 function phase1() {
@@ -617,6 +642,99 @@ app.get('/', (req, res) => {
         edges_res.push({from: edge.v, to: edge.w, label: g.edge(edges[i]) ? JSON.stringify(  g.edge(edges[i]).mergeOption)  : "NO LABEL" });
     }
     res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
+})
+app.get('/phase1', (req, res) => {
+    g = new Graph({directed: false});
+    phase1();
+    let nodes = g.nodes();
+    let edges = g.edges()
+    let nodes_res = [];
+    for(let i = 0; i<nodes.length; i++){
+        let node = nodes[i];
+        nodes_res.push({id: node, label: `${node}\n${g.node(node).type || ""}`, group: `${g.node(node).type || ""}`});
+    }
+    let edges_res = [];
+    for(i = 0; i<edges.length; i++){
+        let edge = edges[i];
+        edges_res.push({from: edge.v, to: edge.w, label: g.edge(edges[i]) ? JSON.stringify(  g.edge(edges[i]).mergeOption)  : "NO LABEL" });
+    }
+    res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
+})
+app.get('/phase2', (req, res) => {
+    phase2();
+    let nodes = g.nodes();
+    let edges = g.edges()
+    let nodes_res = [];
+    for(let i = 0; i<nodes.length; i++){
+        let node = nodes[i];
+        nodes_res.push({id: node, label: `${node}\n${g.node(node).type || ""}`, group: `${g.node(node).type || ""}`});
+    }
+    let edges_res = [];
+    for(i = 0; i<edges.length; i++){
+        let edge = edges[i];
+        edges_res.push({from: edge.v, to: edge.w, label: g.edge(edges[i]) ? JSON.stringify(  g.edge(edges[i]).mergeOption)  : "NO LABEL" });
+    }
+    res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
+})
+app.get('/phase3step', (req, res) => {
+
+	let findEdgeWithLessMergeOptions = (inRange) => {
+        let filtered = inRange
+                .filter(e => {
+                    return g.edge(e) && g.edge(e).mergeOption.length > 0
+                })
+        return filtered.reduce((min, current) => g.edge(current).mergeOption.length < g.edge(min).mergeOption.length ? current : min, filtered[0])
+	}
+
+    let nodes = g.nodes();
+    let edges = g.edges()
+    let nodes_res = [];
+    for(let i = 0; i<nodes.length; i++){
+        let node = nodes[i];
+        nodes_res.push({id: node, label: `${node}\n${g.node(node).type || ""}`, group: `${g.node(node).type || ""}`});
+    }
+    let edges_res = [];
+    for(i = 0; i<edges.length; i++){
+        let edge = edges[i];
+        edges_res.push({from: edge.v, to: edge.w, label: g.edge(edges[i]) ? JSON.stringify(  g.edge(edges[i]).mergeOption)  : "NO LABEL" });
+    }
+
+    let ei = findEdgeWithLessMergeOptions(g.edges())
+    console.log("ei", ei);
+    
+    let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
+    console.log("ei-merge", g.edge(ei).mergeOption)
+    console.log("ej", ej);
+    console.log("ei-merge", g.edge(ej).mergeOption)
+
+    
+    assert(ei != undefined, "EI is undefined");
+    assert(ej != undefined, "EJ is undefined");
+    if (compatible(ei, ej)) {
+        merge(g, ei, ej);
+        
+    } else {
+        let mi = g.edge(ei).mergeOption
+        let mj = g.edge(ej).mergeOption
+  
+        mi.splice(mi.indexOf(ej), 1) // Mi = Mi \ {ej}
+        mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
+    }
+
+    nodes = g.nodes();
+    edges = g.edges()
+    let nodes_res_new = [];
+    for(let i = 0; i<nodes.length; i++){
+        let node = nodes[i];
+        nodes_res_new.push({id: node, label: `${node}\n${g.node(node).type || ""}`, group: `${g.node(node).type || ""}`});
+    }
+    let edges_res_new = [];
+    for(i = 0; i<edges.length; i++){
+        let edge = edges[i];
+        edges_res_new.push({from: edge.v, to: edge.w, label: g.edge(edges[i]) ? JSON.stringify(  g.edge(edges[i]).mergeOption)  : "NO LABEL" });
+    }
+
+    res.render('doubleNetwork', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res), nodes_new: JSON.stringify(nodes_res_new), edges_new: JSON.stringify(edges_res_new)})
 })
 app.listen(3000, () => console.log('Example app listening on port 3000!'))
 
