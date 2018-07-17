@@ -397,7 +397,7 @@ function phase1() {
             if(trace.alreadyUsed){ // Avoid to consider a path already used as opposite path
                 return;
             }
-           
+            console.log(networkData);
             let distance = NETWORK_DIAMETER || networkData[originRouter].distance[destinationName]; // OR COMPUTE DISTANCE WITH SOME OTHER METRICS
             assert(distance != undefined, `Not defined distance between ${originRouter} and ${destinationName}`);
             let oppositePath = getPath(destinationName, originRouter);
@@ -529,15 +529,6 @@ function phase2(){
                                 break;
                             }
                         }catch(x){
-                            console.log("i j", i, j);
-                            console.log(edges[i], edges[j])
-                            console.log("from", from, "to", to);
-                            console.log("newdistance\n\n", newDistance, "\n\n\n\n")
-                            console.log(newDistance[from])
-                            console.log(newDistance[from][to])
-                            console.log(newDistance[from][to].distance)
-                            console.log(distance[from][to]);
-                            console.log(distance[from][to].distance);
                             valid=false;
                         }
                     }
@@ -570,22 +561,26 @@ function phase3() {
 
     let i = 0; // used only for debug prints
     while (existMergeOption()) { //Pseudocode from the paper
-        i++;
         let ei = findEdgeWithLessMergeOptions(g.edges())
         let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
-        
         assert(ei != undefined, "EI is undefined");
-        assert(ej != undefined, "EJ is undefined");
-		if (compatible(ei, ej)) {
-            merge(g, ei, ej);
-            
-		} else {
-			let mi = g.edge(ei).mergeOption
-			let mj = g.edge(ej).mergeOption
-      
-			mi.splice(mi.indexOf(ej), 1) // Mi = Mi \ {ej}
-			mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
-		}
+        if(ej == undefined){
+            let label = g.edge(ei);
+            console.log("\n\n\n\n\t\t\t\tMMMMM....La lunghezza non è = 1\n",label,"\n\n\n\n\n");
+            label.mergeOption = [];
+            g.setEdge(ei, label);
+        }else{
+            if (compatible(ei, ej)) {
+                assert(ej != undefined, "EJ is undefined");
+                merge(g, ei, ej);
+            } else {
+                let mi = g.edge(ei).mergeOption
+                let mj = g.edge(ej).mergeOption
+        
+                mi.splice(mi.indexOf(ej), 1) // Mi = Mi \ {ej}
+                mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
+            }
+        }
 	}
 }
 
@@ -694,12 +689,18 @@ net.createServer(function (socket) {
             }
 
             // Add the monitor to the network
-            networkData[name] = {
-                isMonitor: true,
-                alias: [
-                    ip
-                ],
-                ipNetInt: msg.ipNetInt
+            if(networkData[name] === undefined){
+                networkData[name] = {
+                    isMonitor: true,
+                    alias: [
+                        ip
+                    ],
+                    ipNetInt: msg.ipNetInt
+                }
+            }else{
+                networkData[name].isMonitor = true;
+                networkData[name].alias = [ip];
+                networkData[name].ipNetInt=msg.ipNetInt;
             }
                         
         }
@@ -744,7 +745,7 @@ app.use('/assets', express.static('views/assets'));
 app.get('/', (req, res) => {
     g = new Graph({directed: false});
     iTop();
-    console.log(g);
+
     let nodes = g.nodes();
     let edges = g.edges()
     let nodes_res = [];
@@ -815,27 +816,29 @@ app.get('/phase3step', (req, res) => {
         edges_res.push({from: edge.v, to: edge.w, label: g.edge(edges[i]) ? JSON.stringify(  g.edge(edges[i]).mergeOption)  : "NO LABEL" });
     }
 
+    //****Phase 3 ****/
     let ei = findEdgeWithLessMergeOptions(g.edges())
-
-    
     let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
-
-
-    
     assert(ei != undefined, "EI is undefined");
-    assert(ej != undefined, "EJ is undefined");
-    if (compatible(ei, ej)) {
-
-        merge(g, ei, ej);
-
-    } else {
-        let mi = g.edge(ei).mergeOption
-        let mj = g.edge(ej).mergeOption
-  
-        mi.splice(mi.indexOf(ej), 1) // Mi = Mi \ {ej}
-        mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
-
+    if(ej == undefined){
+        let label = g.edge(ei);
+        console.log("\n\n\n\n\t\t\t\tMMMMM....La lunghezza non è = 1\n",label,"\n\n\n\n\n");
+        label.mergeOption = [];
+        g.setEdge(ei, label);
+    }else{
+        if (compatible(ei, ej)) {
+            assert(ej != undefined, "EJ is undefined");
+            merge(g, ei, ej);
+        } else {
+            let mi = g.edge(ei).mergeOption
+            let mj = g.edge(ej).mergeOption
+    
+            mi.splice(mi.indexOf(ej), 1) // Mi = Mi \ {ej}
+            mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
+        }
     }
+
+    //****End Phase3 */
 
     nodes = g.nodes();
     edges = g.edges()
