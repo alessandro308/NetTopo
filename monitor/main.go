@@ -28,10 +28,10 @@ type AliasRequest struct {
 }
 
 type Monitor struct {
-	IpNetInt    string `json:"ipNetInt"`
-	IpNetUnknow string `json:"ipNetUnknow"`
-	Name        string `json:"name"`
-	Type        string `json:"type"`
+	IpNetInt     string `json:"ipNetInt"`
+	IpNetUnknown string `json:"ipNetUnknown"`
+	Name         string `json:"name"`
+	Type         string `json:"type"`
 }
 
 // TracerouteHop type
@@ -194,7 +194,7 @@ func main() {
 	var monitor Monitor
 	monitor.Name, _ = os.Hostname()
 	// Retrieve IP address associated to the interface attached to the unknow netwrok
-	monitor.IpNetUnknow = GetIpInterface("eth0")
+	monitor.IpNetUnknown = GetIpInterface("eth0")
 	// Retrieve IP address associated to the interface attached to the NetTopo network
 	monitor.IpNetInt = GetIpInterface("eth1")
 	// Subscribe current monitor

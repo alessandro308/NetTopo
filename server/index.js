@@ -461,8 +461,10 @@ function sendResolveAliasRequests(from, to){
     let t1 = getTrace(from, to);
     let t2 = getTrace(to, from);
     console.log("Resolving Alias\n","\tnetworkData\n", networkData);
-    let a = networkData[t1.from].ipNetInt;
-    let b = networkData[t1.to].ipNetInt;
+    console.log("t1", t1);
+    console.log("t2", t2);
+    let a = networkData[from].ipNetInt;
+    let b = networkData[to].ipNetInt;
     let ab = t1.hops;
     let ba = t2.hops.reverse();
     // Assertion: same hops length
@@ -516,7 +518,7 @@ net.createServer(function (socket) {
             let ipAddresses = [];
             for(key in networkData){
                 if(networkData[key].isMonitor){
-                    ipAddresses.push({ip: networkData[key].alias[0], name: key, ipNetInt: msg.ipNetInt});
+                    ipAddresses.push({ip: networkData[key].alias[0], name: key});
                 }   
             }
             if(ipAddresses.length > 0){
@@ -554,7 +556,8 @@ net.createServer(function (socket) {
                 isMonitor: true,
                 alias: [
                     ip
-                ]
+                ],
+                ipNetInt: msg.ipNetInt
             }
                         
         }

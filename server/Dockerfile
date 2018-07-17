@@ -1,6 +1,6 @@
 FROM node
 
-RUN apt-get update && apt-get install -y vim nano
+RUN apt-get update && apt-get install -y vim nano iputils-ping traceroute
 WORKDIR /usr/src/app
 COPY package*.json ./
 COPY . .
