@@ -136,13 +136,128 @@ function addHop(currentName, previousName, newNodeLabel, pathName){
     g.setEdge(previousName, currentName, attachment) 
 }
 
-let merge = (graph, ei, ej) => {
+let mergeLabels = (l1, l2) => {
+    /*
+    assert label { path:  [] , mergeOption: []}
+    */
+    console.log("Merging labels", l1, l2);
+    let result = {};
+    result.path = [...l1.path, ...l2.path].filter((path, index, self) =>
+                                                        index === self.findIndex((t) => (t == path)));
+    result.mergeOption = [...l1.mergeOption, ...l2.mergeOption].filter((edge, index, self) =>
+                                                                            index === self.findIndex((t) => (
+                                                                            t.v === edge.v && t.w === edge.w
+                                                                            )
+                                                                        ));
+    console.log("\t\t in ", result);
+    return result;
+}
+
+let isSameEdge = (edge, anotherEdge) => {
+    if( (edge.v === anotherEdge.v && edge.w === anotherEdge.w) ||
+        (edge.w === anotherEdge.v && edge.v === anotherEdge.w) ) return true;
+    return false;
+}
+
+let nodeContraction = (graph, node1, node2, resultingType) => {
+    console.log("contrazione tra ", node1, " e ", node2);
+    graph.removeEdge(node1, node2);
+    // Vogliamo conservare node1
+    let n2Edges = graph.nodeEdges(node2);
+    // Dobbiamo riattaccarli su nodo 1
+    for(let i = 0; i<n2Edges.length; i++){
+        let currentEdge = n2Edges[i];
+        let currentLabel = graph.edge(currentEdge);
+        //Se già c'è un arco, mergia le etichette
+        let altrocaporispettoadnode2 = currentEdge.v === node2 ? currentEdge.w : currentEdge.v;
+        let resLabel = currentLabel;
+        if(graph.hasEdge(altrocaporispettoadnode2, node1)){
+            console.log("c'è altro capo rispetto a node2, fondo le etichette", {v: altrocaporispettoadnode2, w: node1}, currentEdge )
+            resLabel = mergeLabels(graph.edge(altrocaporispettoadnode2, node1), currentLabel)
+            console.log("resLabel prefilter", resLabel)
+            resLabel.mergeOption = resLabel.mergeOption.filter(edge => (
+                            !isSameEdge(currentEdge, edge) && 
+                            !isSameEdge(edge, {v: altrocaporispettoadnode2, w: node1})
+                        ));
+            console.log("resLabel afterfilter", resLabel);
+        }
+        graph.setEdge(altrocaporispettoadnode2, node1, resLabel);
+    }
+    let label = graph.node(node1)
+    label.type = resultingType
+    graph.setNode(node1, label)
+    graph.removeNode(node2);
+}
+
+
+let merge2 = (graph, ei, ej) => {
+    let resType = resultMerge( // Tabellone del paper
+        graph.node(ei.v).type,
+        graph.node(ei.w).type,
+        graph.node(ej.v).type,
+        graph.node(ej.w).type
+    )
+
+    if(ei.v !== ej.v){
+        nodeContraction(graph, ei.v, ej.v, resType[0]);
+    }
+    if(ei.w !== ej.w){
+        nodeContraction(graph, ei.w, ej.w, resType[1]);
+    }
+
+    // Sistemiamo tutte, tutte, tutte le etichette
+    let edges = graph.edges();
+    for(let i = 0; i<edges.length; i++){
+        let currentEdge = edges[i];
+        let currentLabel = graph.edge(currentEdge);
+        let mergeOptionResult = [];
+        for(let j = 0; j<currentLabel.mergeOption.length; j++){
+            let currentMO = currentLabel.mergeOption[j];
+            let res = {};
+            if(currentMO.v === ej.v){ // IL PROBLEMA è tutto QUI DENTRO!!!
+                res.v = ei.v
+            }else{
+                res.v = currentMO.v;
+            }
+            if(currentMO.v === ej.w){
+                res.v = ei.w
+            }else{
+                res.v = currentMO.v;
+            }
+            if(currentMO.w === ej.w){
+                res.w = ei.w
+            }else{
+                res.w = currentMO.w
+            }
+            if(currentMO.w === ej.v){
+                res.w = ei.v
+            }else{
+                res.w = currentMO.w
+            }
+
+
+            mergeOptionResult.push(res);
+        }
+        currentLabel.mergeOption = mergeOptionResult.filter((edge, index, self) =>
+                                                                index === self.findIndex((t) => (
+                                                                t.v === edge.v && t.w === edge.w
+                                                                )
+                                                            )).filter(edge => (
+                                                                !isSameEdge(currentEdge, edge)
+                                                            ));
+        graph.setEdge(currentEdge, currentLabel);
+    }
+}
+
+let merge = merge2; 
+let oldMerge = (graph, ei, ej) => {
+
     /*
         label = {path: [], mergeOption: []}
     */
     let ejLabel = graph.edge(ej);
     let eilabel = graph.edge(ei);
-  				/*All incident edges ej.v - mapping in order to have the start as other node, not own*/
+  				
     let inEdges = graph.nodeEdges(ej.v).map(e => e.w === ej.v ? e : {v: e.w, w: e.v}); 
     let outEdges = graph.nodeEdges(ej.w).map(e => e.v === ej.w ? e : {v: e.w, w: e.v});
     /*
@@ -446,7 +561,7 @@ function phase3() {
         console.log("ei", ei);
         let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
         console.log("ei-merge", g.edge(ei).mergeOption)
-        console.log("ej", ej);
+        console.log("ej=", ej);
 
         
         assert(ei != undefined, "EI is undefined");
@@ -677,7 +792,7 @@ app.get('/phase2', (req, res) => {
     res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
 })
 app.get('/phase3step', (req, res) => {
-
+    console.log("\n\n\n\n EXECUTING PHASE3STEP")
 	let findEdgeWithLessMergeOptions = (inRange) => {
         let filtered = inRange
                 .filter(e => {
@@ -705,21 +820,28 @@ app.get('/phase3step', (req, res) => {
     let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
     console.log("ei-merge", g.edge(ei).mergeOption)
     console.log("ej", ej);
-    console.log("ei-merge", g.edge(ej).mergeOption)
+    console.log("ej-merge", g.edge(ej).mergeOption)
 
     
     assert(ei != undefined, "EI is undefined");
     assert(ej != undefined, "EJ is undefined");
     if (compatible(ei, ej)) {
+        console.log("is compatibile")
         merge(g, ei, ej);
-        
+        console.log("ei after merge", ei);
+        console.log("ei mergeOpt after merge\n\t", g.edge(ei).mergeOption)
     } else {
+        console.log("Not compatible")
         let mi = g.edge(ei).mergeOption
         let mj = g.edge(ej).mergeOption
   
         mi.splice(mi.indexOf(ej), 1) // Mi = Mi \ {ej}
         mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
+        console.log("ei after merge", ei);
+    
+        console.log("ei-merge after merge", g.edge(ei).mergeOption)
     }
+    console.log("\n\n\n\n");
 
     nodes = g.nodes();
     edges = g.edges()
