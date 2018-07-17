@@ -466,14 +466,15 @@ function sendResolveAliasRequests(from, to){
     let a = networkData[from].ipNetInt;
     let b = networkData[to].ipNetInt;
     let ab = t1.hops;
-    let ba = t2.hops.reverse();
+	let tmp = JSON.parse(JSON.stringify(t2.hops));
+    let ba = tmp.reverse();
     // Assertion: same hops length
-    for(let i = 0; i<ab.length; i++){
-        if( ab[i].success && ba[i].success){
+    for(let i = 0; i<ab.length-1; i++){
+        if( ab[i].success && ba[i+1].success){
             let toSend = {
                 type: "ally",
                 ip1: ab[i].address,
-                ip2: ba[i].address
+                ip2: ba[i+1].address
             }
             let monitorA = new net.Socket();
             monitorA.connect(5000, a, function() {
@@ -562,7 +563,7 @@ net.createServer(function (socket) {
                         
         }
         if(msg.type === "ally_reply"){
-            if(msg.isSame === true){
+            if(msg.success === true){
                 let routerName;
                 for(router in networkData){
                     if(networkData[router].alias.includes(msg.ip1) || networkData[router].alias.includes(msg.ip2)){
