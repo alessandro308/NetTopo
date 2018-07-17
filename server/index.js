@@ -3,7 +3,7 @@ const Graph = graphlib.Graph
 var fs = require('fs');
 const signale = require('signale');
 
-const NETWORK_DIAMETER = 10;
+const NETWORK_DIAMETER = undefined;
 
 const networkData = JSON.parse(fs.readFileSync('./netdata.json', 'utf8'));
 const tracerouteData = JSON.parse(fs.readFileSync('./traceroute.json', 'utf8'));
@@ -69,6 +69,10 @@ function resultMerge(start1, end1, start2, end2){
 }
 
 function compatible(edgeA, edgeB) {
+    if((networkData[edgeA.v] && networkData[edgeA.v].isMonitor)
+    || (networkData[edgeA.w] && networkData[edgeA.w].isMonitor)
+    || (networkData[edgeB.v] && networkData[edgeB.v].isMonitor)
+    || (networkData[edgeB.w] && networkData[edgeB.w].isMonitor)) return false;
 	typeStartA = g.node(edgeA.v).type;
 	typeEndA = g.node(edgeA.w).type;
 	typeStartB = g.node(edgeB.v).type;
@@ -140,7 +144,7 @@ let mergeLabels = (l1, l2) => {
     /*
     assert label { path:  [] , mergeOption: []}
     */
-    console.log("Merging labels", l1, l2);
+
     let result = {};
     result.path = [...l1.path, ...l2.path].filter((path, index, self) =>
                                                         index === self.findIndex((t) => (t == path)));
@@ -149,7 +153,6 @@ let mergeLabels = (l1, l2) => {
                                                                             t.v === edge.v && t.w === edge.w
                                                                             )
                                                                         ));
-    console.log("\t\t in ", result);
     return result;
 }
 
@@ -160,7 +163,7 @@ let isSameEdge = (edge, anotherEdge) => {
 }
 
 let nodeContraction = (graph, node1, node2, resultingType) => {
-    console.log("contrazione tra ", node1, " e ", node2);
+
     graph.removeEdge(node1, node2);
     // Vogliamo conservare node1
     let n2Edges = graph.nodeEdges(node2);
@@ -172,14 +175,11 @@ let nodeContraction = (graph, node1, node2, resultingType) => {
         let altrocaporispettoadnode2 = currentEdge.v === node2 ? currentEdge.w : currentEdge.v;
         let resLabel = currentLabel;
         if(graph.hasEdge(altrocaporispettoadnode2, node1)){
-            console.log("c'è altro capo rispetto a node2, fondo le etichette", {v: altrocaporispettoadnode2, w: node1}, currentEdge )
             resLabel = mergeLabels(graph.edge(altrocaporispettoadnode2, node1), currentLabel)
-            console.log("resLabel prefilter", resLabel)
             resLabel.mergeOption = resLabel.mergeOption.filter(edge => (
                             !isSameEdge(currentEdge, edge) && 
                             !isSameEdge(edge, {v: altrocaporispettoadnode2, w: node1})
                         ));
-            console.log("resLabel afterfilter", resLabel);
         }
         graph.setEdge(altrocaporispettoadnode2, node1, resLabel);
     }
@@ -217,22 +217,20 @@ let merge2 = (graph, ei, ej) => {
             if(currentMO.v === ej.v){ // IL PROBLEMA è tutto QUI DENTRO!!!
                 res.v = ei.v
             }else{
-                res.v = currentMO.v;
-            }
-            if(currentMO.v === ej.w){
-                res.v = ei.w
-            }else{
-                res.v = currentMO.v;
+                if(currentMO.v === ej.w){
+                    res.v = ei.w
+                }else{
+                    res.v = currentMO.v;
+                }
             }
             if(currentMO.w === ej.w){
                 res.w = ei.w
             }else{
-                res.w = currentMO.w
-            }
-            if(currentMO.w === ej.v){
-                res.w = ei.v
-            }else{
-                res.w = currentMO.w
+                if(currentMO.w === ej.v){
+                    res.w = ei.v
+                }else{
+                    res.w = currentMO.w
+                }
             }
 
 
@@ -399,7 +397,8 @@ function phase1() {
             if(trace.alreadyUsed){ // Avoid to consider a path already used as opposite path
                 return;
             }
-            let distance = networkData[originRouter].distance[destinationName] || NETWORK_DIAMETER;
+           
+            let distance = NETWORK_DIAMETER || networkData[originRouter].distance[destinationName]; // OR COMPUTE DISTANCE WITH SOME OTHER METRICS
             assert(distance != undefined, `Not defined distance between ${originRouter} and ${destinationName}`);
             let oppositePath = getPath(destinationName, originRouter);
             signale.error(`Not found opposite path ${destinationName} => ${originRouter} ...`);
@@ -497,42 +496,57 @@ function phase2(){
         edgeAttachment.mergeOption=[];
         g.setEdge(edges[i], edgeAttachment) // adding mergeOption to the existing label
         for(let j = 0; j<edges.length; j++){
-            if(i === j) continue;
-            let valid = true;
-            // Trace Preservation
-            for(path in paths){
-                if(paths[path].includes(edges[i]) && paths[path].includes(edges[j])){
-                    valid = false;
-                    break;
-                }
-            } 
-            if(valid === false){
-                continue;
-            }
-
-
-            //Distance and link endpoint compatibility
-            if( !compatible(edges[i], edges[j]) ){
-                valid = false;
-            }else{
-                let serial = JSON.stringify(graphlib.json.write(g));
-                let copiedGraph = graphlib.json.read(JSON.parse(serial));
-                merge(copiedGraph, edges[i], edges[j]);
-                let newDistance = graphlib.alg.floydWarshall(copiedGraph, () => 1, (node) => copiedGraph.nodeEdges(node)) // O(|V|^3)
-                for(let i = 0; i<tracerouteData.length; i++){
-                    let trace = tracerouteData[i];
-                    let from = getName(trace.from); // resolving alias === get node name associated to ip
-                    let to = getName(trace.to);
-                    if(newDistance[from][to].distance != undefined && newDistance[from][to].distance !== distance[from][to].distance){
+            if(i !== j){
+                let valid = true;
+                // Trace Preservation
+                for(path in paths){
+                    if(paths[path].includes(edges[i]) && paths[path].includes(edges[j])){
                         valid = false;
                         break;
                     }
+                } 
+                if(valid === false){
+                    continue;
                 }
 
-            }
-            if(valid && !edgeAttachment.mergeOption.includes(edges[j])){
-                edgeAttachment.mergeOption.push(edges[j]);
-                g.setEdge(edges[i], edgeAttachment); // There is a control before that check that on edge E1 is not added E1 itself
+
+                //Distance and link endpoint compatibility
+                if( !compatible(edges[i], edges[j]) ){
+                    valid = false;
+                }else{
+                    let serial = JSON.stringify(graphlib.json.write(g));
+                    let copiedGraph = graphlib.json.read(JSON.parse(serial));
+                    merge(copiedGraph, edges[i], edges[j]);
+                    let newDistance = graphlib.alg.floydWarshall(copiedGraph, () => 1, (node) => copiedGraph.nodeEdges(node)) // O(|V|^3)
+                    for(let i1 = 0; i1<tracerouteData.length; i1++){
+                        let trace = tracerouteData[i1];
+                        let from = getName(trace.from); // resolving alias === get node name associated to ip
+                        let to = getName(trace.to);
+                        
+                        try{
+                            if(newDistance[from][to].distance != undefined && newDistance[from][to].distance !== distance[from][to].distance){
+                                valid = false;
+                                break;
+                            }
+                        }catch(x){
+                            console.log("i j", i, j);
+                            console.log(edges[i], edges[j])
+                            console.log("from", from, "to", to);
+                            console.log("newdistance\n\n", newDistance, "\n\n\n\n")
+                            console.log(newDistance[from])
+                            console.log(newDistance[from][to])
+                            console.log(newDistance[from][to].distance)
+                            console.log(distance[from][to]);
+                            console.log(distance[from][to].distance);
+                            valid=false;
+                        }
+                    }
+
+                }
+                if(valid && !edgeAttachment.mergeOption.includes(edges[j])){
+                    edgeAttachment.mergeOption.push(edges[j]);
+                    g.setEdge(edges[i], edgeAttachment); // There is a control before that check that on edge E1 is not added E1 itself
+                }
             }
         }
     }
@@ -558,11 +572,7 @@ function phase3() {
     while (existMergeOption()) { //Pseudocode from the paper
         i++;
         let ei = findEdgeWithLessMergeOptions(g.edges())
-        console.log("ei", ei);
         let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
-        console.log("ei-merge", g.edge(ei).mergeOption)
-        console.log("ej=", ej);
-
         
         assert(ei != undefined, "EI is undefined");
         assert(ej != undefined, "EJ is undefined");
@@ -600,9 +610,6 @@ function getTrace(from, to){
 function sendResolveAliasRequests(from, to){
     let t1 = getTrace(from, to);
     let t2 = getTrace(to, from);
-    console.log("Resolving Alias\n","\tnetworkData\n", networkData);
-    console.log("t1", t1);
-    console.log("t2", t2);
     let a = networkData[from].ipNetInt;
     let b = networkData[to].ipNetInt;
     let ab = t1.hops;
@@ -618,14 +625,12 @@ function sendResolveAliasRequests(from, to){
             }
             let monitorA = new net.Socket();
             monitorA.connect(5000, a, function() {
-                console.log(`Sending ally to ${a}\n`+JSON.stringify(toSend)+"\n");
                 monitorA.write(JSON.stringify(toSend)+"\n");
                 monitorA.destroy();
             });
 
             let monitorB = new net.Socket();
             monitorB.connect(5000, b, function() {
-                console.log(`Sending ally to ${b}\n`+JSON.stringify(toSend)+"\n");
                 monitorB.write(JSON.stringify(toSend)+"\n");
                 monitorB.destroy();
             });
@@ -646,7 +651,6 @@ net.createServer(function (socket) {
             tracerouteData.forEach(trace => trace.alreadyUsed = false)
             let opptrace = getTrace(msg.to, msg.from);
             if(opptrace != null){
-                console.log("exists opposite trace", opptrace);
                 sendResolveAliasRequests(msg.from, msg.to);
             }
         }
@@ -663,14 +667,12 @@ net.createServer(function (socket) {
                 }   
             }
             if(ipAddresses.length > 0){
-                console.log("Exists some other router")
                 let toSend = {
                     type: "trace",
                     monitors: ipAddresses
                 }
                 let monitor = new net.Socket();
                 monitor.connect(5000, msg.ipNetInt, function() {
-                    console.log(`Reply to current monitor${ip}\n`+JSON.stringify(toSend)+"\n");
                     monitor.write(JSON.stringify(toSend)+"\n");
                     monitor.destroy();
                 });
@@ -685,7 +687,6 @@ net.createServer(function (socket) {
                 if(networkData[key].isMonitor){ // All other routers
                     let monitor1 = new net.Socket();
                     monitor1.connect(5000, networkData[key].ipNetInt, function() {
-                        console.log(`Broadcasting all other routers, to ${networkData[key].ipNetInt}\n`+JSON.stringify(toSend)+"\n");
                         monitor1.write(JSON.stringify(toSend)+"\n");
                         monitor1.destroy();
                     });
@@ -815,33 +816,26 @@ app.get('/phase3step', (req, res) => {
     }
 
     let ei = findEdgeWithLessMergeOptions(g.edges())
-    console.log("ei", ei);
+
     
     let ej = findEdgeWithLessMergeOptions(g.edge(ei).mergeOption)
-    console.log("ei-merge", g.edge(ei).mergeOption)
-    console.log("ej", ej);
-    console.log("ej-merge", g.edge(ej).mergeOption)
+
 
     
     assert(ei != undefined, "EI is undefined");
     assert(ej != undefined, "EJ is undefined");
     if (compatible(ei, ej)) {
-        console.log("is compatibile")
+
         merge(g, ei, ej);
-        console.log("ei after merge", ei);
-        console.log("ei mergeOpt after merge\n\t", g.edge(ei).mergeOption)
+
     } else {
-        console.log("Not compatible")
         let mi = g.edge(ei).mergeOption
         let mj = g.edge(ej).mergeOption
   
         mi.splice(mi.indexOf(ej), 1) // Mi = Mi \ {ej}
         mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
-        console.log("ei after merge", ei);
-    
-        console.log("ei-merge after merge", g.edge(ei).mergeOption)
+
     }
-    console.log("\n\n\n\n");
 
     nodes = g.nodes();
     edges = g.edges()

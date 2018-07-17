@@ -73,9 +73,10 @@ func AliasResolutionHandler(ip1 string, ip2 string, serverAddr string) {
 	result.IP2 = ip2
 	result.Type = "ally_reply"
 
-	sameIpID := regexp.MustCompile(`(!?)same_ip`)
+	sameIpID := regexp.MustCompile(`same_ip`)
+	notSameIpID := regexp.MustCompile(`!same_ip`)
 	// Find `same_ip` result but it can be a negative response
-	result.Success = sameIpID.MatchString(string(output)) && sameIpID.FindStringSubmatch(string(output)) == nil
+	result.Success = sameIpID.MatchString(string(output)) && !notSameIpID.MatchString(string(output))
 
 	packet, _ := json.Marshal(result)
 	fmt.Println(string(packet))
@@ -131,8 +132,9 @@ func ParseTracerouteOutput(output string, result *TracerouteResult) {
 }
 
 func TracerouteHandler(from string, monitors []TraceRequest, maxHops string, serverAddr string) {
-	for _, monitor := range monitors {
-		go func() {
+	for i, monitor := range monitors {
+		fmt.Println("iter", i, "monitors", monitors)
+		go func(monitor TraceRequest) {
 			traceroute := exec.Command("traceroute", monitor.IP, "-m", maxHops)
 			fmt.Printf("Traceroute to Monitor %s... ", monitor.IP)
 			output, err := traceroute.Output()
@@ -163,7 +165,7 @@ func TracerouteHandler(from string, monitors []TraceRequest, maxHops string, ser
 			server.Write(packet)
 			fmt.Println("Done!")
 			server.Close()
-		}()
+		}(monitor)
 	}
 }
 
@@ -232,14 +234,15 @@ func main() {
 
 			switch request["type"].(string) {
 			case "trace":
-				fmt.Println("Received Trace:")
-				fmt.Println(scanner.Text())
+				fmt.Println("\n\n\n\nReceived Request to Trace:")
+				fmt.Println(scanner.Text(), "\n\n\n\n")
 				traces := request["monitors"].([]interface{})
-				traceRequest := make([]TraceRequest, len(traces))
+				traceRequest := make([]TraceRequest, 0)
 				for i := range traces {
 					r := traces[i].(map[string]interface{})
 					traceRequest = append(traceRequest, TraceRequest{IP: r["ip"].(string), Name: r["name"].(string)})
 				}
+				fmt.Println("traceRequest prefunction ", traceRequest)
 				TracerouteHandler(monitor.Name, traceRequest, *maxHops, *serverAddr)
 			case "ally":
 				fmt.Println("Text Ally:")
