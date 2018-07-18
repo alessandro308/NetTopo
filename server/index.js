@@ -58,7 +58,8 @@ function sendResolveAliasRequests(from, to){
     
 }
 let itop1 = new iTop(tracerouteData, networkData, undefined); // con distanza fissa a 10
-itop1.run();
+itop1.phase1();
+itop1.phase2()
 // TCP Server to receive Traceroute
 net = require('net');
 net.createServer(function (socket) {
@@ -169,10 +170,27 @@ app.set('view engine', 'pug')
 app.use(express.static('views/assets'));
 app.use('/assets', express.static('views/assets'));
 const MAX_DISTANCE = 10
-app.get('/', (req, res) => {
-    itop = new iTop(tracerouteData, networkData, MAX_DISTANCE);
+app.get("/", (req,res) => {
+    itop = new iTop(tracerouteData, networkData, undefined);
     itop.run();
     
+    let nodes = itop.g.nodes();
+    let edges = itop.g.edges()
+    let nodes_res = [];
+    for(let i = 0; i<nodes.length; i++){
+        let node = nodes[i];
+        nodes_res.push({id: node, label: `${node}\n${itop.g.node(node).type || ""}`, group: `${itop.g.node(node).type || ""}`});
+    }
+    let edges_res = [];
+    for(i = 0; i<edges.length; i++){
+        let edge = edges[i];
+        edges_res.push({from: edge.v, to: edge.w, label: itop.g.edge(edges[i]) ? JSON.stringify(  itop.g.edge(edges[i]).mergeOption)  : "NO LABEL" });
+    }
+    res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
+})
+app.get('/phase1/:distance', (req, res) => {
+    itop = new iTop(tracerouteData, networkData, req.params.distance); //undefined può essere settato con un int e a quel punto considera quella come distanza
+    itop.phase1();
     let nodes = itop.g.nodes();
     let edges = itop.g.edges()
     let nodes_res = [];

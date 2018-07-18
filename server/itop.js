@@ -235,6 +235,11 @@ module.exports = class iTop {
                             res.w = currentMO.w
                         }
                     }
+                    if(res.v > res.w){
+                        let t = res.v;
+                        res.v = res.w;
+                        res.w = t;
+                    }
                     mergeOptionResult.push(res);
                 } 
                 currentLabel.mergeOption = mergeOptionResult
@@ -276,6 +281,7 @@ module.exports = class iTop {
                     .filter(e => {
                         return this.g.edge(e) && this.g.edge(e).mergeOption.length > 0
                     })
+                
             return filtered.reduce((min, current) => 
                                     this.g.edge(current).mergeOption.length < 
                                     this.g.edge(min).mergeOption.length ? current : min, filtered[0])
@@ -500,6 +506,34 @@ module.exports = class iTop {
             }
         }
         this.graphs.push(graphlib.json.write(this.g));
+
+        /*let _edges = this.g.edges(); simmetria check
+        let count = 0;
+        for(let i = 0; i<_edges.length; i++){
+            let e = _edges[i];
+            let mergeOption = this.g.edge(_edges[i]).mergeOption;
+            for(let j = 0; j < mergeOption.length; j++){
+                let innerEdge = mergeOption[j];
+                let innerMergeOption = this.g.edge(mergeOption[j]).mergeOption;
+                let trovato = false;
+                for(let z = 0; z<innerMergeOption.length; z++){
+                    let opt = innerMergeOption[z]
+                    if(opt.v == e.v && opt.w == e.w){
+                        trovato = true;
+                        count++;
+                    } 
+                    if(opt.w == e.v && opt.v == e.w){
+                        trovato = true;
+                        count++;
+                    }
+                }
+                if(trovato == false){
+                    console.log("\n\n\n\n\n\n\t\tERRORE NON C'è simmetria\n\n\n\n")
+                }
+            }
+        }
+        console.log("FASE DUE TERMINATA SENZA PROBLEMI", count, "over", _edges.length, "edges")*/
+        
     }
 
     phase3core(){
@@ -535,9 +569,38 @@ module.exports = class iTop {
             } else {
                 let mi = this.g.edge(ei).mergeOption
                 let mj = this.g.edge(ej).mergeOption
-        
-                mi.splice(mi.indexOf(ej), 1) // Mi = Mi \ {ej}
-                mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
+                console.log("\n\n\n\t\tSPLICE")
+                console.log("ei", ei);
+                console.log("ej", ej)
+                console.log("mi", mi)
+                console.log("mj", mj)
+                
+                let index = -1;
+                for(let i = 0; i<mi.length; i++){
+                    if(mi.v === ej.v && mi.w === ej.w){
+                        index = i;  break;
+                    }
+                    if(mi.w === ej.v && mi.v=== ej.w){
+                        index = i; break;
+                    }
+                }
+                if(index !== -1){
+                    mi.splice(index, 1) // Mi = Mi \ {ej}
+                }
+                index = -1
+                for(let i = 0; i<mi.length; i++){
+                    if(mj.v === ei.v && mj.w === ei.w){
+                        index = i;  break;
+                    }
+                    if(mj.w === ei.v && mj.v=== ei.w){
+                        index = i; break;
+                    }
+                }
+                if(index !== -1){
+                    mj.splice(index, 1) // Mj = Mj \ {ei}
+                }
+                console.log("mi after splice", this.g.edge(ei).mergeOption)
+                console.log("mj after splice", this.g.edge(ej).mergeOption)
             }
         }
         console.log("\n\n\n")
