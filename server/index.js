@@ -57,7 +57,8 @@ function sendResolveAliasRequests(from, to){
     }
     
 }
-
+let itop1 = new iTop(tracerouteData, networkData, undefined); // con distanza fissa a 10
+itop1.run();
 // TCP Server to receive Traceroute
 net = require('net');
 net.createServer(function (socket) {
@@ -187,7 +188,7 @@ app.get('/', (req, res) => {
     res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
 })
 app.get('/phase1', (req, res) => {
-    itop = new iTop(tracerouteData, networkData, MAX_DISTANCE);
+    itop = new iTop(tracerouteData, networkData, undefined); //undefined può essere settato con un int e a quel punto considera quella come distanza
     itop.phase1();
     let nodes = itop.g.nodes();
     let edges = itop.g.edges()

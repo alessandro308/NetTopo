@@ -298,7 +298,7 @@ module.exports = class iTop {
     
     phase1() {
         var fs = require('fs');
-            fs.writeFile("/traceroutesReal.json", JSON.stringify(this.tracerouteData), function(err) {
+            fs.writeFile("./traceroutesComputed.json", JSON.stringify(this.tracerouteData), function(err) {
                 if(err) {
                     return console.log(err);
                 }
@@ -306,7 +306,7 @@ module.exports = class iTop {
                 console.log("The file was saved!");
             }); 
         var fs = require('fs');
-            fs.writeFile("/netDataReal.json", JSON.stringify(this.networkData), function(err) {
+            fs.writeFile("./netDataComputed.json", JSON.stringify(this.networkData), function(err) {
                 if(err) {
                     return console.log(err);
                 }
@@ -508,12 +508,27 @@ module.exports = class iTop {
         let ei = this.findEdgeWithLessMergeOptions(this.g.edges());
         let ej = this.findEdgeWithLessMergeOptions(this.g.edge(ei).mergeOption);
         assert(ei != undefined, "EI is undefined");
+        console.log("ei", ei);
         if(ej == undefined){
             let label = this.g.edge(ei);
-            console.log("\n\n\n\n\t\t\t\tMMMMM....La lunghezza non è = 1 - EJ undefined\n",label,"\n\n\n\n\n");
+            console.log("\n\n EJ is undefined error");
+            console.log("\t\tei", ei);
+            console.log("\t\tei_label", label)
+            console.log("Inner labels");
+                label.mergeOption.forEach(edge => {
+                    console.log("EdgeLAbel of", edge, " is ", this.g.edge(edge))
+                })
             label.mergeOption = [];
             this.g.setEdge(ei, label);
         }else{
+            console.log("ej", ej);
+            this.g.edge(ej).mergeOption.forEach(e => {
+                if(ei.v == e.w && ei.w == e.v){
+                    console.log("\n\n\n\t\t*********INVERSO!!\n\n\n")
+                }
+            })
+            
+            
             if (this.compatible(ei, ej)) {
                 assert(ej != undefined, "EJ is undefined");
                 this.merge(this.g, ei, ej);
@@ -525,6 +540,7 @@ module.exports = class iTop {
                 mj.splice(mj.indexOf(ei), 1) // Mj = Mj \ {ei}
             }
         }
+        console.log("\n\n\n")
     }
 
     phase3() {
@@ -539,6 +555,7 @@ module.exports = class iTop {
         this.phase1();
         this.phase2();
         this.phase3();
+        console.log("Graph computation ended")
     }
 
     runStep(){
