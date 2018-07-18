@@ -2,7 +2,6 @@ FROM node
 
 RUN apt-get update && apt-get install -y vim nano iputils-ping traceroute
 WORKDIR /usr/src/app
-COPY package*.json ./
 COPY . .
 RUN npm install 
 EXPOSE 5000
