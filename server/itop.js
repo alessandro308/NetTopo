@@ -55,30 +55,69 @@ function max(x, y){//Pure function
     }
 }
 function resultMerge(start1, end1, start2, end2){ //Pure function
-    if(less(start1, start2) !== null && less(end1, end2) !== null){
+	if(less(start1, start2) !== null && less(end1, end2) !== null){
 		return [max(start1, start2), max(end1, end2)];
-    }
+    } 
     return null;
 }
-function mergeLabels(l1, l2){ //Pure function
+function mergeLabels(l1, l2) { //Pure function
     /*
     assert label { path:  [] , mergeOption: []}
     */
 
     let result = {};
-    result.path = [...l1.path, ...l2.path].filter((path, index, self) =>
-                                                        index === self.findIndex((t) => (t == path)));
-    result.mergeOption = [...l1.mergeOption, ...l2.mergeOption].filter((edge, index, self) =>
-                                                                            index === self.findIndex((t) => (
-                                                                            t.v === edge.v && t.w === edge.w
-                                                                            )
-                                                                        ));
+    result.path = [...l1.path, ...l2.path].filter(
+		(path, index, self) => index === self.findIndex((t) => (t == path))
+	);
+
+    result.mergeOption = l1.mergeOption
+		.filter(optionL1 => l2.mergeOption.findIndex((optionL2) => isSameEdge(optionL1, optionL2)) != -1) // intersect l1 with l2
+
     return result;
 }
+
 function isSameEdge(edge, anotherEdge){ // Pure function
     if( (edge.v === anotherEdge.v && edge.w === anotherEdge.w) ||
         (edge.w === anotherEdge.v && edge.v === anotherEdge.w) ) return true;
     return false;
+}
+
+function SymmetryCheck(graph) {
+	let _edges = graph.edges();
+    let count = 0;
+	let total = 0;
+	let symmetry = true;
+    for(let i = 0; i<_edges.length; i++){
+        let e = _edges[i];
+        let mergeOption = graph.edge(_edges[i]).mergeOption;
+        for(let j = 0; j < mergeOption.length; j++){
+			total++;
+            let innerEdge = mergeOption[j];
+            let innerMergeOption = graph.edge(mergeOption[j]).mergeOption;
+            let trovato = false;
+            for(let z = 0; z<innerMergeOption.length; z++){
+                let opt = innerMergeOption[z]
+                if(opt.v == e.v && opt.w == e.w){
+                    trovato = true;
+                    count++;
+                } 
+                if(opt.w == e.v && opt.v == e.w){
+                    trovato = true;
+                    count++;
+                }
+            }
+
+			if (!trovato) {
+				console.log("Edge: \n", e, "\n Options: \n", graph.edge(e).mergeOption, "\n Inner edge: \n", innerEdge, "\n Found: \n", innerMergeOption, "\n\n")
+				symmetry = false;
+			}
+        }
+    }
+
+	
+    if(!symmetry){
+        console.log("\n\n\n\n\n\n\t\tERRORE NON C'è simmetria ", count, total, "\n\n\n\n")
+    }
 }
 
 module.exports = class iTop {
@@ -142,7 +181,7 @@ module.exports = class iTop {
         }
 
         this.nodeContraction = (graph, node1, node2, resultingType) => {
-            graph.removeEdge(node1, node2);
+			// graph.removeEdge(node1, node2);
             // Vogliamo conservare node1
             let n2Edges = graph.nodeEdges(node2);
             // Dobbiamo riattaccarli su nodo 1
@@ -154,10 +193,12 @@ module.exports = class iTop {
                 let resLabel = currentLabel;
                 if(graph.hasEdge(altrocaporispettoadnode2, node1)){
                     resLabel = mergeLabels(graph.edge(altrocaporispettoadnode2, node1), currentLabel)
-                    resLabel.mergeOption = resLabel.mergeOption.filter(edge => (
+					/*
+					resLabel.mergeOption = resLabel.mergeOption.filter(edge => (
                                     !isSameEdge(currentEdge, edge) && 
                                     !isSameEdge(edge, {v: altrocaporispettoadnode2, w: node1})
                                 ));
+								*/
                 }
                 graph.setEdge(altrocaporispettoadnode2, node1, resLabel);
             }
@@ -173,14 +214,14 @@ module.exports = class iTop {
                 graph.node(ej.v).type,
                 graph.node(ej.w).type
             )
-        
+
             if(ei.v !== ej.v){
                 this.nodeContraction(graph, ei.v, ej.v, resType[0]);
             }
             if(ei.w !== ej.w){
                 this.nodeContraction(graph, ei.w, ej.w, resType[1]);
             }
-        
+
             // Sistemiamo tutte, tutte, tutte le etichette
             // If contengono entrambe le opzioni, sono tenute e rinominate. Altrimenti l'opzione viene rimossa
 
@@ -235,11 +276,7 @@ module.exports = class iTop {
                             res.w = currentMO.w
                         }
                     }
-                    if(res.v > res.w){
-                        let t = res.v;
-                        res.v = res.w;
-                        res.w = t;
-                    }
+					
                     mergeOptionResult.push(res);
                 } 
                 currentLabel.mergeOption = mergeOptionResult
@@ -255,24 +292,22 @@ module.exports = class iTop {
         }
 
         this.compatible = (edgeA, edgeB) => {
-            if((this.networkData[edgeA.v] && this.networkData[edgeA.v].isMonitor)
-            || (this.networkData[edgeA.w] && this.networkData[edgeA.w].isMonitor)
-            || (this.networkData[edgeB.v] && this.networkData[edgeB.v].isMonitor)
-            || (this.networkData[edgeB.w] && this.networkData[edgeB.w].isMonitor)) return false;
             let typeStartA = this.g.node(edgeA.v).type;
             let typeEndA = this.g.node(edgeA.w).type;
             let typeStartB = this.g.node(edgeB.v).type;
             let typeEndB = this.g.node(edgeB.w).type;
-            if(typeStartA.toUpperCase() === "R" && typeStartB === "R" ){
+
+            if(typeStartA.toUpperCase() === "R" && typeStartB.toUpperCase() === "R" ){
                 if(edgeA.v !== edgeB.v) {
                     return false;
                 }
             }
-            if(typeEndA.toUpperCase() === "R" && typeEndB === "R"){
+            if(typeEndA.toUpperCase() === "R" && typeEndB.toUpperCase() === "R"){
                 if(edgeA.w !== edgeB.w){
                     return false;
                 }
             }
+
             return resultMerge(typeStartA, typeEndA, typeStartB, typeEndB) != null;
         }
 
@@ -472,9 +507,9 @@ module.exports = class iTop {
                     if(valid === false){
                         continue;
                     }
-    
+		
                     //Distance and link endpoint compatibility
-                    if( !this.compatible(edges[i], edges[j]) ){
+                    if(!this.compatible(edges[i], edges[j]) ){
                         valid = false;
                     }else{
                         let serial = JSON.stringify(graphlib.json.write(this.g));
@@ -487,7 +522,7 @@ module.exports = class iTop {
                             let to = this.getName(trace.to);
                             
                             try{
-                                if(newDistance[from][to].distance != undefined &&
+								if(newDistance[from][to].distance != undefined &&
                                     newDistance[from][to].distance !== distance[from][to].distance){
                                     valid = false;
                                     break;
@@ -505,35 +540,9 @@ module.exports = class iTop {
                 }
             }
         }
-        this.graphs.push(graphlib.json.write(this.g));
+        this.graphs.push(graphlib.json.write(this.g));        
 
-        /*let _edges = this.g.edges(); simmetria check
-        let count = 0;
-        for(let i = 0; i<_edges.length; i++){
-            let e = _edges[i];
-            let mergeOption = this.g.edge(_edges[i]).mergeOption;
-            for(let j = 0; j < mergeOption.length; j++){
-                let innerEdge = mergeOption[j];
-                let innerMergeOption = this.g.edge(mergeOption[j]).mergeOption;
-                let trovato = false;
-                for(let z = 0; z<innerMergeOption.length; z++){
-                    let opt = innerMergeOption[z]
-                    if(opt.v == e.v && opt.w == e.w){
-                        trovato = true;
-                        count++;
-                    } 
-                    if(opt.w == e.v && opt.v == e.w){
-                        trovato = true;
-                        count++;
-                    }
-                }
-                if(trovato == false){
-                    console.log("\n\n\n\n\n\n\t\tERRORE NON C'è simmetria\n\n\n\n")
-                }
-            }
-        }
-        console.log("FASE DUE TERMINATA SENZA PROBLEMI", count, "over", _edges.length, "edges")*/
-        
+		SymmetryCheck(this.g);
     }
 
     phase3core(){
@@ -541,7 +550,6 @@ module.exports = class iTop {
         let ei = this.findEdgeWithLessMergeOptions(this.g.edges());
         let ej = this.findEdgeWithLessMergeOptions(this.g.edge(ei).mergeOption);
         assert(ei != undefined, "EI is undefined");
-        console.log("ei", ei);
         if(ej == undefined){
             let label = this.g.edge(ei);
             console.log("\n\n EJ is undefined error");
@@ -554,12 +562,16 @@ module.exports = class iTop {
             label.mergeOption = [];
             this.g.setEdge(ei, label);
         }else{
-            console.log("ej", ej);
             this.g.edge(ej).mergeOption.forEach(e => {
                 if(ei.v == e.w && ei.w == e.v){
                     console.log("\n\n\n\t\t*********INVERSO!!\n\n\n")
                 }
             })
+		
+			// ei = this.g.edge(ej).mergeOption.find(option => isSameEdge(option, ei))
+			console.log("ei", ei);
+			console.log("ej", ej);
+
             
             
             if (this.compatible(ei, ej)) {
@@ -624,5 +636,7 @@ module.exports = class iTop {
     runStep(){
         if(this.existMergeOption()) 
             this.phase3core();
+
+		// SymmetryCheck(this.g);
     }
 }
