@@ -538,7 +538,6 @@ module.exports = class iTop {
 
     phase3core(){
         console.log("Running Phase3core");
-        this.graphs.push(graphlib.json.write(this.g));
         let ei = this.findEdgeWithLessMergeOptions(this.g.edges());
         let ej = this.findEdgeWithLessMergeOptions(this.g.edge(ei).mergeOption);
         assert(ei != undefined, "EI is undefined");
@@ -584,9 +583,9 @@ module.exports = class iTop {
                         index = i; break;
                     }
                 }
-                if(index !== -1){
+                //if(index !== -1){
                     mi.splice(index, 1) // Mi = Mi \ {ej}
-                }
+               // }
                 index = -1
                 for(let i = 0; i<mi.length; i++){
                     if(mj.v === ei.v && mj.w === ei.w){
@@ -596,14 +595,15 @@ module.exports = class iTop {
                         index = i; break;
                     }
                 }
-                if(index !== -1){
+                //if(index !== -1){
                     mj.splice(index, 1) // Mj = Mj \ {ei}
-                }
+                //}
                 console.log("mi after splice", this.g.edge(ei).mergeOption)
                 console.log("mj after splice", this.g.edge(ej).mergeOption)
             }
         }
         console.log("\n\n\n")
+        this.graphs.push(graphlib.json.write(this.g));
     }
 
     phase3() {

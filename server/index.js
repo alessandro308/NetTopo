@@ -57,9 +57,8 @@ function sendResolveAliasRequests(from, to){
     }
     
 }
-let itop1 = new iTop(tracerouteData, networkData, undefined); // con distanza fissa a 10
-itop1.phase1();
-itop1.phase2()
+//let itop1 = new iTop(tracerouteData, networkData, undefined); // con distanza fissa a 10
+
 // TCP Server to receive Traceroute
 net = require('net');
 net.createServer(function (socket) {
@@ -170,7 +169,38 @@ app.set('view engine', 'pug')
 app.use(express.static('views/assets'));
 app.use('/assets', express.static('views/assets'));
 const MAX_DISTANCE = 10
-app.get("/", (req,res) => {
+
+app.get("/nodes", (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    if(itop == undefined){
+        res.send(JSON.stringify( {type: "NO_INIT"} ))
+    }else{
+        let result = JSON.parse(JSON.stringify(itop.networkData));
+        let nodes = itop.g.nodes();
+        for(let i = 0; i<nodes.length; i++){
+            let name = nodes[i];
+            if(result[name] != undefined){
+                result[name].type = result[name].isMonitor ? "Monitor" : itop.g.node(name).type
+            }else{
+                result[name] = {name: name, type: itop.g.node(name).type}
+            }
+            
+        }
+        console.log(result);
+        res.send(JSON.stringify( {type: "SUCCESS", nodes: result } ));
+    }
+    
+})
+app.get("/graphs", (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    if(itop == undefined){
+        res.send(JSON.stringify( {type: "NO_INIT"} ))
+    }else {
+        res.send(JSON.stringify( itop.graphs ))
+    }
+})
+
+app.get("/init", (req,res) => {
     itop = new iTop(tracerouteData, networkData, undefined);
     itop.run();
     
@@ -188,6 +218,9 @@ app.get("/", (req,res) => {
     }
     res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
 })
+
+
+
 app.get('/phase1/:distance', (req, res) => {
     itop = new iTop(tracerouteData, networkData, req.params.distance); //undefined può essere settato con un int e a quel punto considera quella come distanza
     itop.phase1();
@@ -331,6 +364,6 @@ app.get('/merge', (req, res) => {
     res.render('doubleNetwork', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res), nodes_new: JSON.stringify(nodes_res_new), edges_new: JSON.stringify(edges_res_new)})
 })
 
-app.listen(3000, () => console.log('Example app listening on port 3000!'))
+app.listen(3500, () => console.log('Example app listening on port 3000!'))
 
 
