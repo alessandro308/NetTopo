@@ -12,6 +12,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	. "github.com/logrusorgru/aurora"
 )
 
 type AliasResult struct {
@@ -56,16 +58,12 @@ type TracerouteResult struct {
 }
 
 func AliasResolutionHandler(ip1 string, ip2 string, serverAddr string) {
-	fmt.Println("Executing ally...")
 	ally := exec.Command("ally", ip1, ip2)
-	fmt.Printf("Resolution alias for %s %s... ", ip1, ip2)
 	output, err := ally.Output()
 
 	if err != nil {
 		fmt.Println("Error:")
 		log.Fatal(err)
-	} else {
-		fmt.Println("Done!")
 	}
 
 	var result AliasResult
@@ -79,9 +77,7 @@ func AliasResolutionHandler(ip1 string, ip2 string, serverAddr string) {
 	result.Success = sameIpID.MatchString(string(output)) && !notSameIpID.MatchString(string(output))
 
 	packet, _ := json.Marshal(result)
-	fmt.Println(string(packet))
 
-	fmt.Printf("Sending alias resolution result... ")
 	server, err := net.Dial("tcp", serverAddr)
 	if err != nil {
 		fmt.Println("Error:")
@@ -89,7 +85,7 @@ func AliasResolutionHandler(ip1 string, ip2 string, serverAddr string) {
 	}
 	server.Write(packet)
 	server.Close()
-	fmt.Println("Done!")
+	fmt.Println(Green("Done!"))
 }
 
 func GetIpInterface(nameInt string) string {
@@ -132,18 +128,15 @@ func ParseTracerouteOutput(output string, result *TracerouteResult) {
 }
 
 func TracerouteHandler(from string, monitors []TraceRequest, maxHops string, serverAddr string) {
-	for i, monitor := range monitors {
-		fmt.Println("iter", i, "monitors", monitors)
+	for _, monitor := range monitors {
 		go func(monitor TraceRequest) {
 			traceroute := exec.Command("traceroute", monitor.IP, "-m", maxHops)
-			fmt.Printf("Traceroute to Monitor %s... ", monitor.IP)
+			fmt.Println("Traceroute to Monitor %s", Brown(monitor.IP))
 			output, err := traceroute.Output()
 
 			if err != nil {
 				fmt.Println("Error:")
 				log.Fatal(err)
-			} else {
-				fmt.Println("Done!")
 			}
 
 			var result TracerouteResult
@@ -154,16 +147,13 @@ func TracerouteHandler(from string, monitors []TraceRequest, maxHops string, ser
 			ParseTracerouteOutput(string(output), &result)
 
 			packet, _ := json.Marshal(result)
-			fmt.Println(string(packet))
 
-			fmt.Printf("Sending traceroute result... ")
 			server, err := net.Dial("tcp", serverAddr)
 			if err != nil {
 				fmt.Println("Error:")
 				log.Fatal(err)
 			}
 			server.Write(packet)
-			fmt.Println("Done!")
 			server.Close()
 		}(monitor)
 	}
@@ -174,25 +164,24 @@ func main() {
 	var maxHops = flag.String("m", "10", "")
 
 	flag.Parse()
-	fmt.Printf("Opening port 5000... ")
+	fmt.Printf("Establishment connection with the server... ")
 	l, err := net.Listen("tcp", ":5000")
 	if err != nil {
 		fmt.Println("Error:")
 		log.Fatal(err)
 	} else {
-		fmt.Println("Done!")
+		fmt.Println(Green("Done!"))
 	}
 
 	// Subscription phase
-	fmt.Println("Subscribing current monitor to server...")
+	fmt.Printf("Subscribing current monitor to server... ")
 	server, err := net.Dial("tcp", *serverAddr)
 
 	if err != nil {
 		fmt.Println("Error:")
 		log.Fatal(err)
-	} else {
-		fmt.Println("Done!")
 	}
+
 	var monitor Monitor
 	monitor.Name, _ = os.Hostname()
 	// Retrieve IP address associated to the interface attached to the unknow netwrok
@@ -204,10 +193,10 @@ func main() {
 	subscription, _ := json.Marshal(monitor)
 	server.Write(subscription)
 	server.Close()
-	fmt.Println("Done!")
+	fmt.Println(Green("Done!"))
 
 	defer l.Close()
-	fmt.Println("Listening on 5000 for incoming requests...")
+	fmt.Println("Listening on 5000 for incoming server requests...")
 
 	for {
 		conn, err := l.Accept()
@@ -234,19 +223,16 @@ func main() {
 
 			switch request["type"].(string) {
 			case "trace":
-				fmt.Println("\n\n\n\nReceived Request to Trace:")
-				fmt.Println(scanner.Text(), "\n\n\n\n")
+				fmt.Println(Bold(Brown("Received Traceroute Request ")))
 				traces := request["monitors"].([]interface{})
 				traceRequest := make([]TraceRequest, 0)
 				for i := range traces {
 					r := traces[i].(map[string]interface{})
 					traceRequest = append(traceRequest, TraceRequest{IP: r["ip"].(string), Name: r["name"].(string)})
 				}
-				fmt.Println("traceRequest prefunction ", traceRequest)
 				TracerouteHandler(monitor.Name, traceRequest, *maxHops, *serverAddr)
 			case "ally":
-				fmt.Println("Text Ally:")
-				fmt.Println(scanner.Text())
+				fmt.Println(Cyan("Received Ally Request for "), Bold(Cyan(request["ip1"].(string))), Cyan(" and "), Bold(Cyan(request["ip2"].(string))))
 				AliasResolutionHandler(request["ip1"].(string), request["ip2"].(string), *serverAddr)
 			}
 

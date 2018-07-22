@@ -121,25 +121,14 @@ function SymmetryCheck(graph) {
 }
 
 module.exports = class iTop {
-    constructor(tracerouteData, networkData, networkDiameter){
+    constructor(tracerouteData, networkData, networkDiameter, anonGenerator){
         this.tracerouteData = tracerouteData;
         this.networkDiameter = networkDiameter;
         this.networkData = networkData;
         this.g = new Graph({
             directed: false
         });
-        this.anonRouter = (() =>{
-            let routerName = 0;
-            return {
-                getNewAnonRouter: function(){
-                    routerName++;
-                    return "A"+routerName;
-                },
-                getLastAnonRouter: function(){
-                    return "A"+routerName;
-                }
-            }
-        })();
+        this.anonRouter = anonGenerator;
         this.getName = (address) => {
             for (var key in this.networkData) {
                 if(this.networkData[key].alias.includes(address)){
@@ -333,8 +322,18 @@ module.exports = class iTop {
         this.phase3 = this.phase3.bind(this);
         this.run = this.run.bind(this);
         this.runStep = this.runStep.bind(this);
-
         this.graphs = [];
+
+        tracerouteData.forEach(trace => {
+            trace.hops.forEach(hop => {
+                if(hop.success){
+                    let name = this.getName(hop.address);
+                    if(name === hop.address){
+                        networkData[this.anonRouter.getNewRouter()] = {alias: [hop.address], type:"R"}
+                    }
+                }
+            })
+        });
     }
     
     phase1() {
@@ -595,9 +594,9 @@ module.exports = class iTop {
                         index = i; break;
                     }
                 }
-                //if(index !== -1){
+                if(index !== -1){
                     mi.splice(index, 1) // Mi = Mi \ {ej}
-               // }
+                }
                 index = -1
                 for(let i = 0; i<mi.length; i++){
                     if(mj.v === ei.v && mj.w === ei.w){
@@ -607,9 +606,9 @@ module.exports = class iTop {
                         index = i; break;
                     }
                 }
-                //if(index !== -1){
+                if(index !== -1){
                     mj.splice(index, 1) // Mj = Mj \ {ei}
-                //}
+                }
                 console.log("mi after splice", this.g.edge(ei).mergeOption)
                 console.log("mj after splice", this.g.edge(ej).mergeOption)
             }

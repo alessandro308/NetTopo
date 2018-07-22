@@ -1,5 +1,7 @@
 let iTop = require("./itop.js")
 var fs = require('fs');
+var path    = require("path");
+
 const graphlib = require("@dagrejs/graphlib")
 const Graph = graphlib.Graph
 
@@ -7,13 +9,17 @@ const networkData = JSON.parse(fs.readFileSync('./netdata.json', 'utf8'));
 const tracerouteData = JSON.parse(fs.readFileSync('./traceroute.json', 'utf8'));
 let anonRouter = (() =>{
     let routerName = 0;
+    let routerKnownName = 0;
     return {
         getNewAnonRouter: function(){
             routerName++;
-            return "C"+routerName;
+            return "A"+routerName;
         },
         getLastAnonRouter: function(){
-            return "C"+routerName;
+            return "A"+routerName;
+        },
+        getNewRouter: function(){
+            return "R"+(++routerKnownName);
         }
     }
 })();
@@ -68,7 +74,8 @@ net.createServer(function (socket) {
         if(msg.type === "trace"){
             tracerouteData.push(msg);
             
-            tracerouteData.forEach(trace => trace.alreadyUsed = false)
+            tracerouteData.forEach(trace => trace.alreadyUsed = false);
+            
             let opptrace = getTrace(msg.to, msg.from);
             if(opptrace != null){
                 sendResolveAliasRequests(msg.from, msg.to);
@@ -139,8 +146,7 @@ net.createServer(function (socket) {
                     }
                 }
                 if(routerName == undefined){
-                    networkData[anonRouter.getNewAnonRouter()] = {isMonitor: false, distance: {}}; // setting empty distance
-                    networkData[anonRouter.getLastAnonRouter()].alias = [msg.ip1, msg.ip2];
+                    networkData[anonRouter.getNewRouter()] = {isMonitor: false, distance: {}, alias:[msg.ip1, msg.ip2]}; // setting empty distance
                 }else{
                     if(!networkData[routerName].alias.includes(msg.ip1)){
                         networkData[routerName].alias.push(msg.ip1)
@@ -168,6 +174,8 @@ let itop; //Used as shared var between /phase1, /phase2...
 app.set('view engine', 'pug')
 app.use(express.static('views/assets'));
 app.use('/assets', express.static('views/assets'));
+app.use('/static', express.static('views/static'));
+app.use('/', express.static('views'));
 const MAX_DISTANCE = 10
 
 app.get("/nodes", (req, res) => {
@@ -200,23 +208,15 @@ app.get("/graphs", (req, res) => {
     }
 })
 
+app.get("/", (req,res) => {
+    res.sendFile(path.join(__dirname+'/views/index.html'));
+});
+
 app.get("/init", (req,res) => {
-    itop = new iTop(tracerouteData, networkData, undefined);
+    itop = new iTop(tracerouteData, networkData, undefined, anonRouter);
     itop.run();
     
-    let nodes = itop.g.nodes();
-    let edges = itop.g.edges()
-    let nodes_res = [];
-    for(let i = 0; i<nodes.length; i++){
-        let node = nodes[i];
-        nodes_res.push({id: node, label: `${node}\n${itop.g.node(node).type || ""}`, group: `${itop.g.node(node).type || ""}`});
-    }
-    let edges_res = [];
-    for(i = 0; i<edges.length; i++){
-        let edge = edges[i];
-        edges_res.push({from: edge.v, to: edge.w, label: itop.g.edge(edges[i]) ? JSON.stringify(  itop.g.edge(edges[i]).mergeOption)  : "NO LABEL" });
-    }
-    res.render('network', {nodes: JSON.stringify(nodes_res), edges: JSON.stringify(edges_res)})
+    res.send("OK");
 })
 
 

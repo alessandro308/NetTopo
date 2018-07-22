@@ -1,1 +1,48 @@
-{"A":{"alias":["192.168.1.4"],"distance":{"A":0,"F":4,"E":5,"I":3,"J":3},"isMonitor":true,"ipNetInt":"1.1.1.10"},"F":{"alias":["192.168.6.4"],"distance":{"A":4,"F":0,"E":4,"I":5,"J":6},"isMonitor":true,"ipNetInt":"1.1.1.14"},"E":{"alias":["192.168.5.4"],"distance":{"A":5,"F":4,"E":0,"I":4,"J":6},"isMonitor":true,"ipNetInt":"1.1.1.13"},"I":{"alias":["192.168.9.4"],"distance":{"A":3,"F":5,"E":4,"I":0,"J":3},"isMonitor":true,"ipNetInt":"1.1.1.12"},"J":{"alias":["192.168.8.4"],"distance":{"A":3,"F":6,"E":6,"I":3,"J":0},"isMonitor":true,"ipNetInt":"1.1.1.11"},"C1":{"isMonitor":false,"distance":{},"alias":["192.168.8.1","10.10.7.1"]},"C2":{"isMonitor":false,"distance":{},"alias":["10.10.9.1","192.168.1.1"]},"C3":{"isMonitor":false,"distance":{},"alias":["192.168.9.1","10.10.6.2"]}}
+{
+    "A": {
+      "distance": {
+        "A": 0,
+        "F": 4,
+        "E": 5,
+        "I": 3,
+        "J": 3
+      },
+  "alias": []
+    },
+    "F": {
+      "distance": {
+        "A": 4,
+        "F": 0,
+        "E": 4,
+        "I": 5,
+        "J": 6
+      },"alias": []
+    },
+    "E": {
+      "distance": {
+        "A": 5,
+        "F": 4,
+        "E": 0,
+        "I": 4,
+        "J": 6
+      },"alias": []
+    },
+    "I": {
+      "distance": {
+        "A": 3,
+        "F": 5,
+        "E": 4,
+        "I": 0,
+        "J": 3
+      },"alias": []
+    },
+    "J": {
+      "distance": {
+        "A": 3,
+        "F": 6,
+        "E": 6,
+        "I": 3,
+        "J": 0
+      },"alias": []
+    }
+  }
